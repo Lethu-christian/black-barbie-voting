@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 Deno.serve(async (req) => {
   const corsHeaders = {
@@ -24,6 +24,15 @@ Deno.serve(async (req) => {
 
     const body = await req.json()
     const mode = body.mode
+
+    if (mode === 'debug') {
+      return ok({
+        success: true,
+        has_yoco_key: !!YOCO_SECRET_KEY,
+        has_supabase_url: !!SUPABASE_URL,
+        has_service_key: !!SUPABASE_SERVICE_ROLE_KEY
+      })
+    }
 
     // ── CREATE CHECKOUT ────────────────────────────────────────────────────
     if (mode === 'create') {
