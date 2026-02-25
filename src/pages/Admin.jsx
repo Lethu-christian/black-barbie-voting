@@ -122,19 +122,28 @@ export default function Admin() {
 
     const fetchData = async () => {
         setLoading(true);
-        // Fetch Contestants
-        const { data: cData } = await supabase.from('contestants').select('*').order('votes', { ascending: false });
-        if (cData) setContestants(cData);
+        try {
+            // Fetch Contestants
+            const { data: cData, error: cErr } = await supabase.from('contestants').select('*').order('votes', { ascending: false });
+            if (cErr) throw new Error("Contestants: " + cErr.message);
+            if (cData) setContestants(cData);
 
-        // Fetch Transactions
-        const { data: tData } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
-        if (tData) setTransactions(tData);
+            // Fetch Transactions (Allow this to fail if table doesn't exist yet, but log it)
+            const { data: tData, error: tErr } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+            if (tErr) console.warn("Transactions table missing or error:", tErr.message);
+            else if (tData) setTransactions(tData);
 
-        // Fetch Gallery
-        const { data: gData } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
-        if (gData) setGalleryItems(gData);
+            // Fetch Gallery (Allow this to fail if table doesn't exist yet, but log it)
+            const { data: gData, error: gErr } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+            if (gErr) console.warn("Gallery table missing or error:", gErr.message);
+            else if (gData) setGalleryItems(gData);
 
-        setLoading(false);
+        } catch (err) {
+            console.error("Data fetch error:", err);
+            // We don't alert here to avoid spamming on page load, but could if needed
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleLogout = async () => {
@@ -145,21 +154,34 @@ export default function Admin() {
     // --- CRUD OPERATIONS ---
     const handleAddContestant = async () => {
         if (!newC.name || !newC.number) return alert("Required fields missing");
+        console.log("Adding contestant...", newC);
         setLoading(true);
+
+        // Safety timeout: If it takes more than 10 seconds, reset loading
+        const timeout = setTimeout(() => {
+            setLoading(false);
+            alert("Database is taking too long. Please check your internet or Supabase status.");
+        }, 10000);
+
         try {
             const { error } = await supabase.from('contestants').insert({
                 name: newC.name, number: parseInt(newC.number), bio: newC.bio,
                 image_url: newC.image_url || 'https://via.placeholder.com/400', votes: 0
             });
+
+            clearTimeout(timeout);
+            console.log("Insert result:", error ? "ERROR" : "SUCCESS", error);
+
             if (!error) {
                 setNewC({ name: '', number: '', bio: '', image_url: '' });
                 setIsAdding(false);
-                fetchData();
+                await fetchData();
             } else {
-                alert(error.message);
+                alert("Database Error: " + error.message);
             }
         } catch (err) {
-            console.error(err);
+            clearTimeout(timeout);
+            console.error("Crash during add:", err);
             alert("An unexpected error occurred: " + err.message);
         } finally {
             setLoading(false);
@@ -175,9 +197,9 @@ export default function Admin() {
             }).eq('id', editingContestant.id);
             if (!error) {
                 setEditingContestant(null);
-                fetchData();
+                await fetchData();
             } else {
-                alert(error.message);
+                alert("Update Error: " + error.message);
             }
         } catch (err) {
             console.error(err);
@@ -190,18 +212,29 @@ export default function Admin() {
     // --- GALLERY CRUD ---
     const handleAddGallery = async () => {
         if (!newG.title || !newG.url) return alert("Title and URL are required");
+        console.log("Adding to gallery...", newG);
         setLoading(true);
+
+        const timeout = setTimeout(() => {
+            setLoading(false);
+            alert("Gallery save timed out. Please check if the 'gallery' table exists in Supabase.");
+        }, 10000);
+
         try {
             const { error } = await supabase.from('gallery').insert([newG]);
+            clearTimeout(timeout);
+            console.log("Gallery insert result:", error ? "ERROR" : "SUCCESS", error);
+
             if (!error) {
                 setNewG({ title: '', desc: '', url: '' });
                 setIsAddingGallery(false);
-                fetchData();
+                await fetchData();
             } else {
-                alert(error.message);
+                alert("Gallery Error: " + error.message);
             }
         } catch (err) {
-            console.error(err);
+            clearTimeout(timeout);
+            console.error("Gallery crash:", err);
             alert("Failed to add gallery item: " + err.message);
         } finally {
             setLoading(false);
@@ -218,9 +251,9 @@ export default function Admin() {
             }).eq('id', editingGallery.id);
             if (!error) {
                 setEditingGallery(null);
-                fetchData();
+                await fetchData();
             } else {
-                alert(error.message);
+                alert("Update Error: " + error.message);
             }
         } catch (err) {
             console.error(err);
