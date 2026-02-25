@@ -4,7 +4,7 @@ import {
     LayoutDashboard, Users, CreditCard, LogOut, Plus, Trash2,
     Edit, X, Image as ImageIcon, Save, Loader2, Search,
     TrendingUp, Calendar, ArrowUpRight, ArrowDownRight,
-    Download, Bell, Filter, MoreHorizontal
+    Download, Bell, Filter, MoreHorizontal, ShieldCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -97,6 +97,7 @@ export default function Admin() {
     const [editingGallery, setEditingGallery] = useState(null);
     const [newC, setNewC] = useState({ name: '', number: '', bio: '', image_url: '' });
     const [newG, setNewG] = useState({ title: '', desc: '', url: '' });
+    const [systemStatus, setSystemStatus] = useState({ checked: false, function: 'checking', keys: 'checking' });
 
     useEffect(() => {
         const checkAdmin = async () => {
@@ -115,10 +116,37 @@ export default function Admin() {
                 navigate('/home');
             } else {
                 fetchData();
+                checkSystemHealth();
             }
         };
         checkAdmin();
     }, []);
+
+    const checkSystemHealth = async () => {
+        try {
+            const { data, error } = await supabase.functions.invoke('verify-yoco', {
+                body: { mode: 'debug' }
+            });
+            if (error) {
+                setSystemStatus({ checked: true, function: 'error', keys: error.message });
+            } else if (data?.success) {
+                const missing = [];
+                if (!data.has_yoco_key) missing.push("YOCO_SECRET_KEY");
+                if (!data.has_supabase_url) missing.push("SUPABASE_URL");
+                if (!data.has_service_key) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+
+                setSystemStatus({
+                    checked: true,
+                    function: 'ok',
+                    keys: missing.length === 0 ? 'ok' : `Missing: ${missing.join(', ')}`
+                });
+            } else {
+                setSystemStatus({ checked: true, function: 'error', keys: data?.error || 'Unknown response' });
+            }
+        } catch (err) {
+            setSystemStatus({ checked: true, function: 'error', keys: err.message });
+        }
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -470,6 +498,42 @@ export default function Admin() {
                                     icon={Calendar}
                                     colorClass="bg-amber-500 text-amber-500"
                                 />
+                            </div>
+
+                            {/* System Status Diagnostic */}
+                            <div className="bg-white/70 backdrop-blur-2xl p-6 rounded-[2rem] border border-white/60 shadow-xl shadow-pink-500/5 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-3 rounded-xl ${systemStatus.function === 'ok' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                        <ShieldCheck size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-800">System Connection Status</h4>
+                                        <p className="text-xs text-slate-400 font-medium">Verify Cloud Logic & Database Keys</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Payment Gateway</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${systemStatus.function === 'ok' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
+                                            <span className="text-xs font-black text-slate-700 uppercase">{systemStatus.function === 'ok' ? 'FUNCTION_ONLINE' : 'OFFLINE_OR_ERROR'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cloud Keys</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${systemStatus.keys === 'ok' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
+                                            <span className="text-xs font-black text-slate-700 uppercase">{systemStatus.keys === 'ok' ? 'SECRET_KEYS_VERIFIED' : systemStatus.keys}</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={checkSystemHealth}
+                                        className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400"
+                                        title="Re-run Diagnostics"
+                                    >
+                                        <TrendingUp size={20} className="rotate-90" />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Main Chart Section */}
