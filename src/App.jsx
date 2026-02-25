@@ -25,7 +25,7 @@ function App() {
         <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><Admin /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/voter-auth" element={<VoterAuth />} />
-        <Route path="/contestant/:id" element={<ContestantDetails />} />
+        <Route path="/contestant/:number" element={<ContestantDetails />} />
       </Routes>
     </Router>
   );

@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import YocoPayment from '../components/YocoPayment'; // Import Yoco Component
 
 export default function ContestantDetails() {
-    const { id } = useParams();
+    const { number } = useParams();
     const navigate = useNavigate();
     const [contestant, setContestant] = useState(null);
     const [votes, setVotes] = useState(1);
@@ -17,10 +17,10 @@ export default function ContestantDetails() {
     useEffect(() => {
         fetchContestant();
         supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
-    }, [id]);
+    }, [number]);
 
     const fetchContestant = async () => {
-        const { data, error } = await supabase.from('contestants').select('*').eq('id', id).single();
+        const { data, error } = await supabase.from('contestants').select('*').eq('number', number).single();
         if (error) console.error("Error:", error);
         setContestant(data);
     };

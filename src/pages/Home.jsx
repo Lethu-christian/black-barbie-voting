@@ -320,7 +320,7 @@ function LeaderCard({ contestant, rank, color, delay, height, isWinner }) {
             transition={{ delay, type: "spring", stiffness: 120, damping: 20 }}
             className={cn("col-span-4 flex flex-col items-center justify-end relative z-10", height)}
         >
-            <Link to={`/contestant/${contestant.id}`} className="w-full h-full relative group perspective-500">
+            <Link to={`/contestant/${contestant.number}`} className="w-full h-full relative group perspective-500">
                 <div className={cn(
                     "absolute inset-0 rounded-[2.5rem] shadow-2xl overflow-hidden border-4 border-white transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-pink-300/50",
                     isWinner ? "ring-8 ring-yellow-400/20 z-20" : "grayscale-[30%] group-hover:grayscale-0"
@@ -354,7 +354,7 @@ function ContestantCard({ data }) {
             whileHover={{ y: -12 }}
             className="group relative"
         >
-            <Link to={`/contestant/${data.id}`}>
+            <Link to={`/contestant/${data.number}`}>
                 {/* Card Glass Container */}
                 <div className="bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-3 border border-white/60 shadow-lg hover:shadow-2xl hover:shadow-pink-200/60 transition-all duration-500">
 
