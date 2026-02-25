@@ -84,6 +84,7 @@ export default function Admin() {
     const [activeTab, setActiveTab] = useState('analytics');
     const [contestants, setContestants] = useState([]);
     const [transactions, setTransactions] = useState([]);
+    const [galleryItems, setGalleryItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [userEmail, setUserEmail] = useState('Admin'); // For initials
@@ -91,14 +92,32 @@ export default function Admin() {
 
     // Modal States
     const [isAdding, setIsAdding] = useState(false);
+    const [isAddingGallery, setIsAddingGallery] = useState(false);
     const [editingContestant, setEditingContestant] = useState(null);
+    const [editingGallery, setEditingGallery] = useState(null);
     const [newC, setNewC] = useState({ name: '', number: '', bio: '', image_url: '' });
+    const [newG, setNewG] = useState({ title: '', desc: '', url: '' });
 
     useEffect(() => {
-        fetchData();
-        supabase.auth.getUser().then(({ data }) => {
-            if (data.user) setUserEmail(data.user.email);
-        });
+        const checkAdmin = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return navigate('/login');
+            setUserEmail(user.email);
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+
+            if (profile?.role !== 'admin') {
+                alert("Unauthorized access. Admins only.");
+                navigate('/home');
+            } else {
+                fetchData();
+            }
+        };
+        checkAdmin();
     }, []);
 
     const fetchData = async () => {
@@ -110,6 +129,11 @@ export default function Admin() {
         // Fetch Transactions
         const { data: tData } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
         if (tData) setTransactions(tData);
+
+        // Fetch Gallery
+        const { data: gData } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+        if (gData) setGalleryItems(gData);
+
         setLoading(false);
     };
 
@@ -148,6 +172,50 @@ export default function Admin() {
             fetchData();
         } else {
             alert(error.message);
+        }
+    };
+
+    // --- GALLERY CRUD ---
+    const handleAddGallery = async () => {
+        if (!newG.title || !newG.url) return alert("Title and URL are required");
+        setLoading(true);
+        const { error } = await supabase.from('gallery').insert([newG]);
+        setLoading(false);
+        if (!error) {
+            setNewG({ title: '', desc: '', url: '' });
+            setIsAddingGallery(false);
+            fetchData();
+        } else {
+            alert(error.message);
+        }
+    };
+
+    const handleUpdateGallery = async () => {
+        setLoading(true);
+        const { error } = await supabase.from('gallery').update({
+            title: editingGallery.title,
+            desc: editingGallery.desc,
+            url: editingGallery.url
+        }).eq('id', editingGallery.id);
+        setLoading(false);
+        if (!error) {
+            setEditingGallery(null);
+            fetchData();
+        } else {
+            alert(error.message);
+        }
+    };
+
+    const handleDeleteGallery = async (id) => {
+        if (window.confirm('Delete this gallery item?')) {
+            setLoading(true);
+            const { error } = await supabase.from('gallery').delete().eq('id', id);
+            setLoading(false);
+            if (!error) {
+                setGalleryItems(prev => prev.filter(g => g.id !== id));
+            } else {
+                alert(error.message);
+            }
         }
     };
 
@@ -197,6 +265,11 @@ export default function Admin() {
         t.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const filteredGallery = galleryItems.filter(g =>
+        g.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        g.desc?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     // Helpers
     function handleEditClick(c) {
         setEditingContestant({ ...c });
@@ -225,6 +298,7 @@ export default function Admin() {
                         { id: 'analytics', icon: LayoutDashboard, label: 'Overview' },
                         { id: 'contestants', icon: Users, label: 'Contestants' },
                         { id: 'transactions', icon: CreditCard, label: 'Finance' },
+                        { id: 'gallery', icon: ImageIcon, label: 'Gallery' },
                     ].map((item) => (
                         <button
                             key={item.id}
@@ -519,6 +593,59 @@ export default function Admin() {
                             </div>
                         </div>
                     )}
+
+                    {activeTab === 'gallery' && (
+                        <div className="space-y-8 max-w-8xl mx-auto animate-in fade-in duration-300 relative z-10">
+                            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/60 backdrop-blur-xl p-4 rounded-[2rem] border border-white/60 shadow-lg shadow-pink-500/5">
+                                <div className="flex items-center gap-3 w-full md:w-auto">
+                                    <div className="relative w-full md:w-80 group">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" size={20} />
+                                        <input
+                                            className="w-full pl-12 pr-4 py-3 bg-white border border-pink-100 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-pink-100 focus:border-pink-300 transition-all shadow-sm"
+                                            placeholder="Search gallery..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsAddingGallery(true)}
+                                    className="w-full md:w-auto px-8 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl font-bold shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 hover:-translate-y-0.5 flex items-center justify-center gap-2 transition-all"
+                                >
+                                    <Plus size={20} /> Add Image
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {filteredGallery.map((item) => (
+                                    <div key={item.id} className="group bg-white rounded-[2rem] border border-pink-50 overflow-hidden hover:shadow-2xl hover:shadow-pink-500/10 transition-all duration-500 hover:-translate-y-2">
+                                        <div className="relative h-64 bg-slate-100 overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-60" />
+                                            <img src={item.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={item.title} />
+
+                                            <div className="absolute bottom-4 right-4 z-20 flex gap-2 translate-y-10 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                                                <button onClick={() => setEditingGallery({ ...item })} className="p-3 bg-white rounded-xl text-slate-800 hover:text-pink-600 shadow-lg hover:shadow-xl transition-all"><Edit size={18} /></button>
+                                                <button onClick={() => handleDeleteGallery(item.id)} className="p-3 bg-white rounded-xl text-rose-500 hover:bg-rose-50 shadow-lg hover:shadow-xl transition-all"><Trash2 size={18} /></button>
+                                            </div>
+                                        </div>
+                                        <div className="p-6">
+                                            <h3 className="font-black text-xl text-slate-800 truncate">{item.title}</h3>
+                                            <p className="text-slate-400 text-xs mt-2 line-clamp-2">{item.desc}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {filteredGallery.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-32 text-slate-400 bg-white/40 rounded-[3rem] border border-dashed border-pink-200">
+                                    <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mb-4 text-pink-300">
+                                        <ImageIcon size={40} />
+                                    </div>
+                                    <p className="font-medium text-lg">No gallery images found</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </main>
 
@@ -590,6 +717,67 @@ export default function Admin() {
                             <button onClick={() => { setIsAdding(false); setEditingContestant(null); }} className="px-6 py-3 rounded-xl text-slate-500 font-bold hover:bg-slate-50 transition-colors">Cancel</button>
                             <button
                                 onClick={isAdding ? handleAddContestant : handleUpdateContestant}
+                                disabled={loading}
+                                className="px-8 py-3 rounded-xl bg-pink-600 text-white font-bold hover:bg-pink-700 shadow-lg shadow-pink-500/30 flex items-center gap-2 disabled:opacity-70 transition-all hover:scale-105 active:scale-95"
+                            >
+                                {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                                {loading ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- GALLERY MODALS --- */}
+            {(isAddingGallery || editingGallery) && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={() => { setIsAddingGallery(false); setEditingGallery(null); }}></div>
+                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg relative z-10 overflow-hidden animate-in zoom-in-95 duration-200 border border-white/20">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 to-rose-500" />
+                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
+                            <div>
+                                <h3 className="font-black text-xl text-slate-800">{isAddingGallery ? 'New Gallery Item' : 'Edit Gallery Item'}</h3>
+                                <p className="text-xs text-slate-400 font-medium mt-1">Manage archives</p>
+                            </div>
+                            <button onClick={() => { setIsAddingGallery(false); setEditingGallery(null); }} className="p-2 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors"><X size={20} /></button>
+                        </div>
+                        <div className="p-8 space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Title</label>
+                                <input
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-pink-100 focus:border-pink-400 outline-none transition-all font-bold text-slate-700"
+                                    placeholder="e.g. Grand Opening"
+                                    value={isAddingGallery ? newG.title : editingGallery.title}
+                                    onChange={e => isAddingGallery ? setNewG({ ...newG, title: e.target.value }) : setEditingGallery({ ...editingGallery, title: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Image URL</label>
+                                <div className="relative">
+                                    <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-pink-100 focus:border-pink-400 outline-none transition-all text-sm font-medium"
+                                        placeholder="https://example.com/image.jpg"
+                                        value={isAddingGallery ? newG.url : editingGallery.url}
+                                        onChange={e => isAddingGallery ? setNewG({ ...newG, url: e.target.value }) : setEditingGallery({ ...editingGallery, url: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Description</label>
+                                <textarea
+                                    rows={3}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-4 focus:ring-pink-100 focus:border-pink-400 outline-none transition-all resize-none text-sm font-medium"
+                                    placeholder="Memory description..."
+                                    value={isAddingGallery ? newG.desc : editingGallery.desc}
+                                    onChange={e => isAddingGallery ? setNewG({ ...newG, desc: e.target.value }) : setEditingGallery({ ...editingGallery, desc: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div className="p-8 pt-0 flex justify-end gap-3">
+                            <button onClick={() => { setIsAddingGallery(false); setEditingGallery(null); }} className="px-6 py-3 rounded-xl text-slate-500 font-bold hover:bg-slate-50 transition-colors">Cancel</button>
+                            <button
+                                onClick={isAddingGallery ? handleAddGallery : handleUpdateGallery}
                                 disabled={loading}
                                 className="px-8 py-3 rounded-xl bg-pink-600 text-white font-bold hover:bg-pink-700 shadow-lg shadow-pink-500/30 flex items-center gap-2 disabled:opacity-70 transition-all hover:scale-105 active:scale-95"
                             >

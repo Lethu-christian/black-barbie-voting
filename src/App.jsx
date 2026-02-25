@@ -4,6 +4,8 @@ import Home from './pages/Home';       // This is your Voting Arena
 import Leaderboard from './pages/Leaderboard';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
+import Gallery from './pages/Gallery';
+import VoterAuth from './pages/VoterAuth';
 import ContestantDetails from './pages/ContestantDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -19,8 +21,10 @@ function App() {
 
         {/* Other existing routes */}
         <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+        <Route path="/gallery" element={<Gallery />} />
+        <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><Admin /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
+        <Route path="/voter-auth" element={<VoterAuth />} />
         <Route path="/contestant/:id" element={<ContestantDetails />} />
       </Routes>
     </Router>

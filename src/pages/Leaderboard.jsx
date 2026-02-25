@@ -96,7 +96,7 @@ export default function Leaderboard() {
                                             <Activity size={16} className="text-pink-500" />
                                         </div>
                                         <span className="text-sm font-bold text-slate-500 uppercase tracking-widest font-mono">
-                                            Active Contenders
+                                            Active Contestants
                                         </span>
                                     </div>
                                     <div className="text-xs font-mono text-slate-400 bg-white/50 px-2 py-1 rounded border border-white">
@@ -132,7 +132,7 @@ function Header() {
         <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/40 border-b border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
             <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <Link to="/" className="group relative overflow-hidden p-2.5 bg-white rounded-xl shadow-sm border border-pink-100 hover:border-pink-300 transition-all active:scale-95">
+                    <Link to="/home" className="group relative overflow-hidden p-2.5 bg-white rounded-xl shadow-sm border border-pink-100 hover:border-pink-300 transition-all active:scale-95">
                         <div className="absolute inset-0 bg-pink-100 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                         <ArrowLeft size={18} className="relative z-10 text-slate-700 group-hover:text-pink-600" />
                     </Link>
@@ -141,11 +141,11 @@ function Header() {
 
                     <div>
                         <h1 className="text-lg font-black tracking-tighter text-slate-800 flex items-center gap-2">
-                            GLOBAL <span className="text-pink-500">RANKINGS</span>
+                            TOP <span className="text-pink-500">CONTESTANTS</span>
                         </h1>
                         <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            System Online
+                            Voting System Online
                         </div>
                     </div>
                 </div>
@@ -153,7 +153,7 @@ function Header() {
                 <div className="flex items-center gap-3">
                     <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-800 text-white rounded-lg shadow-lg shadow-pink-500/20">
                         <Globe size={12} className="text-pink-400 animate-[spin_10s_linear_infinite]" />
-                        <span className="text-[10px] font-mono tracking-widest">NET_V.2.0</span>
+                        <span className="text-[10px] font-mono tracking-widest">BBA_V.2.0</span>
                     </div>
                 </div>
             </div>

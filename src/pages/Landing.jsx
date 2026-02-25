@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
     Trophy, Users, Vote, Star, Crown, ChevronDown,
-    Sparkles, Globe, ArrowRight, LayoutGrid
+    Sparkles, Globe, ArrowRight, LayoutGrid, User
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { clsx } from 'clsx';
@@ -19,16 +19,16 @@ const STEPS = [
         id: 'semi',
         title: "The Semi-Finalist",
         label: "Phase 01",
-        desc: "The journey begins here. Top contenders are selected from thousands of entries.",
+        desc: "The journey begins here. Contestants are selected from hundreds of entries.",
         icon: Users,
         color: "bg-pink-500",
         shadow: "shadow-pink-500/40"
     },
     {
         id: 'campaign',
-        title: "Global Campaign",
+        title: "Campaign",
         label: "Phase 02",
-        desc: "Contestants engage with the community, showcasing their platform and elegance.",
+        desc: "Contestants engage with the community and social media introducing themselves as semi-finalists, showcasing their platform, elegance. and intelligence.",
         icon: Globe,
         color: "bg-purple-500",
         shadow: "shadow-purple-500/40"
@@ -37,7 +37,7 @@ const STEPS = [
         id: 'votes',
         title: "Public Voting",
         label: "Phase 03",
-        desc: "Power to the people. Live telemetry tracking determines who advances to the next stage.",
+        desc: "Power to the people. Live voting begins as the community votes for their favorite semi-finalist.",
         icon: Vote,
         color: "bg-blue-500",
         shadow: "shadow-blue-500/40"
@@ -46,7 +46,7 @@ const STEPS = [
         id: 'finalist',
         title: "The Finalist",
         label: "Phase 04",
-        desc: "The elite tier emerges. Only the strongest contenders remain for the final stage.",
+        desc: "The elite tier emerges. Only the strongest contestants remain for the grand finale.",
         icon: Star,
         color: "bg-orange-500",
         shadow: "shadow-orange-500/40"
@@ -55,7 +55,7 @@ const STEPS = [
         id: 'finale',
         title: "Grand Finale",
         label: "Coronation",
-        desc: "The ultimate moment. One queen rises to wear the Black Barbie Crown.",
+        desc: "The ultimate moment. The winners rises to wear the Black Barbie Ambassador Crown plus many more prizes.",
         icon: Crown,
         color: "bg-yellow-400",
         shadow: "shadow-yellow-400/60",
@@ -113,7 +113,7 @@ export default function Landing() {
                     transition={{ delay: 0.2 }}
                     className="text-5xl md:text-8xl font-black tracking-tighter text-slate-900 mb-6 leading-[0.9]"
                 >
-                    THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">JOURNEY</span>
+                    THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">BBA</span>  <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">JOURNEY</span>
                 </motion.h1>
 
                 <motion.p
@@ -141,6 +141,12 @@ export default function Landing() {
                             <LayoutGrid size={20} /> ENTER VOTING ARENA <ArrowRight size={20} />
                         </span>
                     </Link>
+
+                    <div className="mt-8">
+                        <Link to="/voter-auth" className="text-xs font-black text-slate-400 hover:text-pink-600 tracking-[0.3em] uppercase transition-colors flex items-center justify-center gap-2">
+                            <User size={14} /> Account Login
+                        </Link>
+                    </div>
                 </motion.div>
 
                 <motion.div
@@ -156,8 +162,8 @@ export default function Landing() {
             <div className="relative z-10 pb-40 overflow-hidden">
                 <div className="max-w-4xl mx-auto relative px-4 md:px-0">
 
-                    {/* THE SNAKE LINE (Desktop SVG) */}
-                    <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none hidden md:block">
+                    {/* THE SNAKE LINE (All Screen Sizes) */}
+                    <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none">
                         <svg className="w-full h-full visible" preserveAspectRatio="none" viewBox="0 0 800 1600">
                             <defs>
                                 <linearGradient id="snakeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -182,11 +188,9 @@ export default function Landing() {
                         </svg>
                     </div>
 
-                    {/* Mobile Vertical Line */}
-                    <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-pink-300 via-purple-300 to-yellow-300 md:hidden border-l-2 border-dashed border-pink-300/50" />
 
                     {/* NODES */}
-                    <div className="relative space-y-16 md:space-y-0 md:h-[1500px] pt-10 md:pt-0">
+                    <div className="relative h-[1500px] pt-10 md:pt-0">
                         {STEPS.map((step, index) => (
                             <JourneyCard key={step.id} step={step} index={index} />
                         ))}
@@ -217,12 +221,12 @@ function JourneyCard({ step, index }) {
     // Mobile: Always centered relative to container
     // Desktop: Uses absolute positioning for the snake layout
 
-    let desktopPositionClass = "";
-    if (index === 0) desktopPositionClass = "md:absolute md:top-0 md:left-1/2 md:-translate-x-1/2";
-    else if (index === 1) desktopPositionClass = "md:absolute md:top-[300px] md:left-0 md:ml-10";
-    else if (index === 2) desktopPositionClass = "md:absolute md:top-[700px] md:right-0 md:mr-10";
-    else if (index === 3) desktopPositionClass = "md:absolute md:top-[1100px] md:left-0 md:ml-10";
-    else if (index === 4) desktopPositionClass = "md:absolute md:top-[1400px] md:left-1/2 md:-translate-x-1/2";
+    let positionClass = "absolute ";
+    if (index === 0) positionClass += "top-0 left-1/2 -translate-x-1/2";
+    else if (index === 1) positionClass += "top-[300px] left-2 md:left-10";
+    else if (index === 2) positionClass += "top-[700px] right-2 md:right-10";
+    else if (index === 3) positionClass += "top-[1100px] left-2 md:left-10";
+    else if (index === 4) positionClass += "top-[1400px] left-1/2 -translate-x-1/2";
 
     const isGrand = step.isGrand;
 
@@ -233,8 +237,8 @@ function JourneyCard({ step, index }) {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
             className={cn(
-                "relative w-full md:w-[350px] z-10",
-                desktopPositionClass
+                "relative w-[280px] sm:w-[350px] z-10",
+                positionClass
             )}
         >
             <div className="relative group">

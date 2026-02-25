@@ -12,9 +12,11 @@ export default function ContestantDetails() {
     const [votes, setVotes] = useState(1);
     const [email, setEmail] = useState(''); // Kept for receipt/record purposes if needed
     const [isProcessing, setIsProcessing] = useState(false);
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         fetchContestant();
+        supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
     }, [id]);
 
     const fetchContestant = async () => {
@@ -59,7 +61,7 @@ export default function ContestantDetails() {
 
             {/* 1. NAV HEADER */}
             <div className="relative z-20 px-4 py-4 md:px-8 md:py-6 flex justify-between items-center max-w-7xl mx-auto">
-                <Link to="/" className="group flex items-center gap-2 bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95">
+                <Link to="/home" className="group flex items-center gap-2 bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95">
                     <ArrowLeft size={16} className="text-slate-600 group-hover:-translate-x-1 transition-transform" />
                     <span className="text-xs font-bold text-slate-600 tracking-wide">RETURN</span>
                 </Link>
@@ -90,7 +92,7 @@ export default function ContestantDetails() {
                             {/* Floating ID Tag */}
                             <div className="absolute top-6 right-6">
                                 <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white px-4 py-2 rounded-xl flex flex-col items-center">
-                                    <span className="text-[10px] uppercase tracking-widest font-bold text-white/70">ID Code</span>
+                                    <span className="text-[10px] uppercase tracking-widest font-bold text-white/70">Contestant N.O</span>
                                     <span className="text-2xl font-black font-mono leading-none">#{contestant.number}</span>
                                 </div>
                             </div>
@@ -123,7 +125,7 @@ export default function ContestantDetails() {
                                     <Zap className="fill-current" size={24} />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Power</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Votes</p>
                                     <p className="text-2xl font-black text-slate-900">{contestant.votes.toLocaleString()}</p>
                                 </div>
                             </div>
@@ -170,7 +172,7 @@ export default function ContestantDetails() {
                             <div className="bg-slate-50/80 rounded-3xl p-6 border border-slate-100 mb-6">
                                 <div className="flex justify-between items-center mb-4">
                                     <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Vote Quantity</span>
-                                    <span className="text-xs font-mono text-pink-600 font-bold bg-pink-100 px-2 py-1 rounded">R2.00 / UNIT</span>
+                                    <span className="text-xs font-mono text-pink-600 font-bold bg-pink-100 px-2 py-1 rounded">R2.00 / Vote</span>
                                 </div>
 
                                 <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-slate-200">
@@ -218,6 +220,8 @@ export default function ContestantDetails() {
                                     contestantId={contestant.id}
                                     voteCount={votes}
                                     onSuccess={handleYocoSuccess}
+                                    voterId={user?.id}
+                                    voterEmail={user?.email}
                                 />
                             </div>
 

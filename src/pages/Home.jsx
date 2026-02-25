@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import {
     Search, Trophy, Zap, Sparkles, Crown, ChevronRight,
-    Fingerprint, Activity, Globe, Star, ShieldCheck, Cpu, LayoutGrid
+    Fingerprint, Activity, Globe, Star, ShieldCheck, Cpu, LayoutGrid, Image as ImageIcon, User
 } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -18,6 +18,7 @@ export default function Home() {
     const [contestants, setContestants] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
     const { scrollY } = useScroll();
 
     // Advanced Parallax for background elements
@@ -45,6 +46,26 @@ export default function Home() {
 
         return () => { supabase.removeChannel(subscription); };
     }, []);
+
+    useEffect(() => {
+        // Check for current user
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        checkUser();
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+    };
 
     const filtered = contestants.filter(c =>
         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -101,6 +122,31 @@ export default function Home() {
                                 </span>
                             </div>
 
+                            {/* VOTER LOGIN / PROFILE */}
+                            {user ? (
+                                <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-pink-100 rounded-full border border-pink-200">
+                                    <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white text-[10px] font-black">
+                                        {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-[9px] font-black text-pink-700 tracking-widest uppercase truncate max-w-[80px]">
+                                        {user.user_metadata?.full_name || 'VOTER'}
+                                    </span>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="text-[9px] font-black text-slate-400 hover:text-slate-600 tracking-widest uppercase transition-colors"
+                                    >
+                                        LOGOUT
+                                    </button>
+                                </div>
+                            ) : (
+                                <Link to="/voter-auth" className="hidden sm:flex items-center gap-2 group/login">
+                                    <div className="p-2 bg-pink-50 rounded-lg group-hover/login:bg-pink-100 transition-colors">
+                                        <User size={16} className="text-pink-600" />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase group-hover/login:text-pink-600 transition-colors">SIGN IN</span>
+                                </Link>
+                            )}
+
                             {/* --- THE ADMIN LOGIN BUTTON --- */}
                             <Link to="/admin">
                                 <motion.button
@@ -153,7 +199,7 @@ export default function Home() {
                                 transition={{ delay: 0.2 }}
                                 className="text-lg md:text-xl text-slate-500 max-w-lg font-medium leading-relaxed"
                             >
-                                The ecosystem is live. Experience the next generation of pageantry with real-time telemetry and secure voting protocols.
+                                The ecosystem is live. Experience the next generation of pageantry with real-time telemetry and secure voting protocols powered by BLACK BARBIE BY TK.
                             </motion.p>
 
                             <motion.div
@@ -170,6 +216,9 @@ export default function Home() {
                                 </button>
                                 <Link to="/leaderboard" className="px-8 py-4 bg-white text-slate-900 border border-slate-200 rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-sm hover:bg-slate-50 transition-colors">
                                     VIEW RANKINGS
+                                </Link>
+                                <Link to="/gallery" className="px-8 py-4 bg-pink-50 text-pink-600 border border-pink-200 rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-sm hover:bg-pink-100 transition-colors">
+                                    <ImageIcon size={18} /> 2025 SEASON
                                 </Link>
                             </motion.div>
                         </div>
@@ -197,7 +246,7 @@ export default function Home() {
                         <div className="flex items-end justify-between mb-12 px-2">
                             <div>
                                 <h3 className="text-xs font-black text-pink-500 tracking-[0.3em] uppercase mb-2 flex items-center gap-2">
-                                    <Cpu size={14} /> Live Database
+                                    <Cpu size={14} /> Live Votes
                                 </h3>
                                 <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900">TOP CONTESTANTS</h2>
                             </div>
@@ -257,19 +306,6 @@ export default function Home() {
                 </main>
             </div>
 
-            {/* Mobile Nav */}
-            <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] bg-slate-900/90 backdrop-blur-2xl text-white rounded-[2rem] p-2 shadow-2xl z-50 flex justify-between items-center border border-white/10 md:hidden">
-                <NavButton icon={<LayoutGrid size={20} />} active />
-                <NavButton icon={<Search size={20} />} />
-                <Link to="/admin-login">
-                    <NavButton icon={<ShieldCheck size={20} />} />
-                </Link>
-                <Link to="/profile">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 p-[2px]">
-                        <img src="https://api.dicebear.com/7.x/micah/svg?seed=User" className="w-full h-full rounded-full bg-slate-800" alt="User" />
-                    </div>
-                </Link>
-            </nav>
         </div>
     );
 }
