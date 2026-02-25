@@ -146,32 +146,44 @@ export default function Admin() {
     const handleAddContestant = async () => {
         if (!newC.name || !newC.number) return alert("Required fields missing");
         setLoading(true);
-        const { error } = await supabase.from('contestants').insert({
-            name: newC.name, number: parseInt(newC.number), bio: newC.bio,
-            image_url: newC.image_url || 'https://via.placeholder.com/400', votes: 0
-        });
-        setLoading(false);
-        if (!error) {
-            setNewC({ name: '', number: '', bio: '', image_url: '' });
-            setIsAdding(false);
-            fetchData();
-        } else {
-            alert(error.message);
+        try {
+            const { error } = await supabase.from('contestants').insert({
+                name: newC.name, number: parseInt(newC.number), bio: newC.bio,
+                image_url: newC.image_url || 'https://via.placeholder.com/400', votes: 0
+            });
+            if (!error) {
+                setNewC({ name: '', number: '', bio: '', image_url: '' });
+                setIsAdding(false);
+                fetchData();
+            } else {
+                alert(error.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An unexpected error occurred: " + err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleUpdateContestant = async () => {
         setLoading(true);
-        const { error } = await supabase.from('contestants').update({
-            name: editingContestant.name, number: parseInt(editingContestant.number),
-            bio: editingContestant.bio, image_url: editingContestant.image_url
-        }).eq('id', editingContestant.id);
-        setLoading(false);
-        if (!error) {
-            setEditingContestant(null);
-            fetchData();
-        } else {
-            alert(error.message);
+        try {
+            const { error } = await supabase.from('contestants').update({
+                name: editingContestant.name, number: parseInt(editingContestant.number),
+                bio: editingContestant.bio, image_url: editingContestant.image_url
+            }).eq('id', editingContestant.id);
+            if (!error) {
+                setEditingContestant(null);
+                fetchData();
+            } else {
+                alert(error.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Update failed: " + err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -179,42 +191,60 @@ export default function Admin() {
     const handleAddGallery = async () => {
         if (!newG.title || !newG.url) return alert("Title and URL are required");
         setLoading(true);
-        const { error } = await supabase.from('gallery').insert([newG]);
-        setLoading(false);
-        if (!error) {
-            setNewG({ title: '', desc: '', url: '' });
-            setIsAddingGallery(false);
-            fetchData();
-        } else {
-            alert(error.message);
+        try {
+            const { error } = await supabase.from('gallery').insert([newG]);
+            if (!error) {
+                setNewG({ title: '', desc: '', url: '' });
+                setIsAddingGallery(false);
+                fetchData();
+            } else {
+                alert(error.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to add gallery item: " + err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleUpdateGallery = async () => {
         setLoading(true);
-        const { error } = await supabase.from('gallery').update({
-            title: editingGallery.title,
-            desc: editingGallery.desc,
-            url: editingGallery.url
-        }).eq('id', editingGallery.id);
-        setLoading(false);
-        if (!error) {
-            setEditingGallery(null);
-            fetchData();
-        } else {
-            alert(error.message);
+        try {
+            const { error } = await supabase.from('gallery').update({
+                title: editingGallery.title,
+                desc: editingGallery.desc,
+                url: editingGallery.url
+            }).eq('id', editingGallery.id);
+            if (!error) {
+                setEditingGallery(null);
+                fetchData();
+            } else {
+                alert(error.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Update gallery failed: " + err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleDeleteGallery = async (id) => {
         if (window.confirm('Delete this gallery item?')) {
             setLoading(true);
-            const { error } = await supabase.from('gallery').delete().eq('id', id);
-            setLoading(false);
-            if (!error) {
-                setGalleryItems(prev => prev.filter(g => g.id !== id));
-            } else {
-                alert(error.message);
+            try {
+                const { error } = await supabase.from('gallery').delete().eq('id', id);
+                if (!error) {
+                    setGalleryItems(prev => prev.filter(g => g.id !== id));
+                } else {
+                    alert(error.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Delete failed: " + err.message);
+            } finally {
+                setLoading(false);
             }
         }
     };
