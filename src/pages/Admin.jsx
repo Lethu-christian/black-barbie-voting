@@ -265,7 +265,12 @@ export default function Admin() {
                 finalImageUrl = await uploadImage(newG.imageFile);
             }
 
-            const { error } = await supabase.from('gallery').insert([{ ...newG, url: finalImageUrl, imageFile: undefined }]);
+            const { error } = await supabase.from('gallery').insert([{
+                title: newG.title,
+                desc: newG.desc,
+                url: finalImageUrl
+            }]);
+
             if (!error) {
                 setNewG({ title: '', desc: '', url: '', imageFile: null });
                 setIsAddingGallery(false);

@@ -29,15 +29,15 @@ export default function ContestantDetails() {
             return;
         }
 
-        const { data, error } = await supabase.from('contestants').select('*').eq('number', numericId).single();
+        const { data, error } = await supabase.from('contestants').select('*').eq('number', numericId).limit(1);
         if (error) {
             console.error("Supabase Fetch Error:", error);
             setHasError(true);
-        } else if (!data) {
+        } else if (!data || data.length === 0) {
             console.warn("No contestant found with number:", numericId);
             setHasError(true);
         } else {
-            setContestant(data);
+            setContestant(data[0]);
             setHasError(false);
         }
     };
