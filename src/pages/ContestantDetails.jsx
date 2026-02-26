@@ -24,7 +24,7 @@ export default function ContestantDetails() {
         setContestant(data);
     };
 
-    const totalAmountZAR = votes * 2;
+    const totalAmountZAR = (Number(votes) || 0) * 2;
     const amountInCents = totalAmountZAR * 100;
 
     const handlePaymentSuccess = async () => {
@@ -206,19 +206,40 @@ export default function ContestantDetails() {
 
                                 <div className="flex items-center justify-between mt-2">
                                     <button
-                                        onClick={() => setVotes(Math.max(1, votes - 1))}
+                                        onClick={() => setVotes(Math.max(1, (Number(votes) || 1) - 1))}
                                         className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 flex items-center justify-center transition-all active:scale-95 shadow-sm"
                                     >
                                         <Minus size={24} />
                                     </button>
 
                                     <div className="flex flex-col items-center">
-                                        <span className="text-5xl font-black text-slate-900 tabular-nums tracking-tighter">{votes}</span>
+                                        <input
+                                            type="number"
+                                            value={votes}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (val === '') {
+                                                    setVotes('');
+                                                } else {
+                                                    const parsed = parseInt(val);
+                                                    if (!isNaN(parsed) && parsed >= 1) {
+                                                        setVotes(parsed);
+                                                    }
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (!votes || Number(votes) < 1) {
+                                                    setVotes(1);
+                                                }
+                                            }}
+                                            min="1"
+                                            className="text-5xl font-black text-slate-900 tabular-nums tracking-tighter w-24 text-center bg-transparent outline-none focus:ring-0 appearance-none m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                        />
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">VOTES SELECTED</span>
                                     </div>
 
                                     <button
-                                        onClick={() => setVotes(votes + 1)}
+                                        onClick={() => setVotes((Number(votes) || 0) + 1)}
                                         className="w-14 h-14 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-slate-900/20"
                                     >
                                         <Plus size={24} />
