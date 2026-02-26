@@ -65,9 +65,9 @@ export default function VoterAuth() {
 
             {/* Header */}
             <header className="relative z-10 p-6 flex items-center justify-between max-w-7xl mx-auto w-full">
-                <Link to="/" className="group flex items-center gap-3 bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95">
+                <Link to="/home" className="group flex items-center gap-3 bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95">
                     <ArrowLeft size={16} className="text-slate-600 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-xs font-bold text-slate-600 tracking-wide uppercase">Back to Landing</span>
+                    <span className="text-xs font-bold text-slate-600 tracking-wide uppercase">Back to Arena</span>
                 </Link>
                 <Link to="/home" className="text-xs font-bold text-pink-600 hover:text-pink-700 tracking-widest uppercase">
                     Vote as Guest

@@ -8,7 +8,7 @@ export default function ContestantCard({ contestant, rank }) {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group relative"
         >
-            <Link to={`/contestant/${contestant.id}`}>
+            <Link to={`/contestant/${contestant.number}`}>
                 <div className="relative h-96 overflow-hidden">
                     {rank && (
                         <div className="absolute top-4 right-4 z-10 w-10 h-10 bg-yellow-400 text-brand-900 rounded-full flex items-center justify-center font-bold shadow-lg border-2 border-white">
@@ -29,7 +29,7 @@ export default function ContestantCard({ contestant, rank }) {
                     <h3 className="font-serif text-xl font-bold text-gray-900">
                         {contestant.name}
                     </h3>
-                    <p className="text-sm text-brand-600 font-medium mb-2">Contestant #{contestant.number}</p>
+                    <p className="text-sm text-brand-600 font-medium mb-2">Contestant #{contestant.id}</p>
                     <div className="flex justify-between items-center border-t border-brand-100 pt-3">
                         <span className="text-2xl font-bold text-brand-600">{contestant.votes}</span>
                         <span className="text-xs text-gray-500 uppercase tracking-wide">Votes</span>

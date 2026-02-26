@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, UserCog, Camera } from 'lucide-react';
+import { ShieldCheck, UserCog } from 'lucide-react';
 
 export default function Navbar() {
     return (
         <nav className="fixed top-0 inset-x-0 z-50 px-6 py-4 flex justify-between items-center backdrop-blur-xl bg-white/60 border-b border-white/40 shadow-sm transition-all duration-300">
-            <Link to="/home" className="flex items-center gap-3 group">
+            <Link to="/" className="flex items-center gap-3 group">
                 {/* Logo Container with Glow */}
                 <div className="relative">
                     <div className="absolute inset-0 bg-pink-400/30 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -32,13 +32,6 @@ export default function Navbar() {
             </Link>
 
             <div className="flex items-center gap-4">
-                <Link
-                    to="/gallery"
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-bold text-slate-600 hover:text-pink-600 transition-all"
-                >
-                    <Camera size={16} />
-                    <span className="hidden sm:inline">2025 Gallery</span>
-                </Link>
                 <Link
                     to="/admin"
                     className="group relative inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-pink-100 text-xs md:text-sm font-bold text-slate-600 hover:text-pink-600 hover:border-pink-200 hover:shadow-lg hover:shadow-pink-500/10 transition-all duration-300"

@@ -96,7 +96,7 @@ export default function Leaderboard() {
                                             <Activity size={16} className="text-pink-500" />
                                         </div>
                                         <span className="text-sm font-bold text-slate-500 uppercase tracking-widest font-mono">
-                                            Active Contestants
+                                            Active Contenders
                                         </span>
                                     </div>
                                     <div className="text-xs font-mono text-slate-400 bg-white/50 px-2 py-1 rounded border border-white">
@@ -141,11 +141,11 @@ function Header() {
 
                     <div>
                         <h1 className="text-lg font-black tracking-tighter text-slate-800 flex items-center gap-2">
-                            TOP <span className="text-pink-500">CONTESTANTS</span>
+                            GLOBAL <span className="text-pink-500">RANKINGS</span>
                         </h1>
                         <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            Voting System Online
+                            System Online
                         </div>
                     </div>
                 </div>
@@ -153,7 +153,7 @@ function Header() {
                 <div className="flex items-center gap-3">
                     <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-800 text-white rounded-lg shadow-lg shadow-pink-500/20">
                         <Globe size={12} className="text-pink-400 animate-[spin_10s_linear_infinite]" />
-                        <span className="text-[10px] font-mono tracking-widest">BBA_V.2.0</span>
+                        <span className="text-[10px] font-mono tracking-widest">NET_V.2.0</span>
                     </div>
                 </div>
             </div>
@@ -174,59 +174,57 @@ function PodiumCard({ data, rank, delay }) {
                 isFirst ? "w-1/3 z-20" : "w-1/4 z-10"
             )}
         >
-            <Link to={`/contestant/${data.number}`} className="w-full flex flex-col items-center">
-                {/* Crown for #1 */}
-                {isFirst && (
-                    <motion.div
-                        animate={{ y: [-5, 5, -5] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute -top-12 z-30"
-                    >
-                        <Crown size={32} className="text-amber-400 fill-amber-300 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]" />
-                    </motion.div>
-                )}
+            {/* Crown for #1 */}
+            {isFirst && (
+                <motion.div
+                    animate={{ y: [-5, 5, -5] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute -top-12 z-30"
+                >
+                    <Crown size={32} className="text-amber-400 fill-amber-300 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]" />
+                </motion.div>
+            )}
 
-                {/* Avatar Container */}
-                <div className="relative mb-4">
-                    {/* Glowing Ring */}
-                    <div className={cn(
-                        "absolute inset-0 rounded-[2rem] blur-xl opacity-60 transition-all duration-500",
-                        isFirst ? "bg-gradient-to-tr from-amber-300 to-pink-500 group-hover:opacity-80 scale-110" : "bg-slate-300"
-                    )} />
+            {/* Avatar Container */}
+            <div className="relative mb-4">
+                {/* Glowing Ring */}
+                <div className={cn(
+                    "absolute inset-0 rounded-[2rem] blur-xl opacity-60 transition-all duration-500",
+                    isFirst ? "bg-gradient-to-tr from-amber-300 to-pink-500 group-hover:opacity-80 scale-110" : "bg-slate-300"
+                )} />
 
-                    <div className={cn(
-                        "relative overflow-hidden border-4 bg-white shadow-2xl transition-transform duration-300 group-hover:-translate-y-2",
-                        isFirst ? "w-28 h-28 md:w-40 md:h-40 rounded-[2rem] border-amber-200" : "w-20 h-20 md:w-28 md:h-28 rounded-3xl border-white"
-                    )}>
-                        <img src={data.image_url} alt={data.name} className="w-full h-full object-cover" />
+                <div className={cn(
+                    "relative overflow-hidden border-4 bg-white shadow-2xl transition-transform duration-300 group-hover:-translate-y-2",
+                    isFirst ? "w-28 h-28 md:w-40 md:h-40 rounded-[2rem] border-amber-200" : "w-20 h-20 md:w-28 md:h-28 rounded-3xl border-white"
+                )}>
+                    <img src={data.image_url} alt={data.name} className="w-full h-full object-cover" />
 
-                        {/* Shine effect */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-transparent opacity-50" />
-                    </div>
-
-                    {/* Rank Badge */}
-                    <div className={cn(
-                        "absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-black text-white shadow-lg border-2 border-white z-30",
-                        isFirst ? "bg-slate-900 min-w-[3rem] text-center" : "bg-slate-400"
-                    )}>
-                        #{rank}
-                    </div>
+                    {/* Shine effect */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-transparent opacity-50" />
                 </div>
 
-                {/* Info */}
-                <div className="text-center relative z-20 mb-2">
-                    <h3 className={cn(
-                        "font-bold text-slate-800 leading-tight px-2 truncate w-full",
-                        isFirst ? "text-xl" : "text-sm"
-                    )}>
-                        {data.name}
-                    </h3>
-                    <div className="flex items-center justify-center gap-1 mt-1">
-                        <Zap size={10} className={isFirst ? "text-amber-500 fill-amber-500" : "text-slate-400"} />
-                        <span className="font-mono font-bold text-xs text-slate-500">{data.votes.toLocaleString()}</span>
-                    </div>
+                {/* Rank Badge */}
+                <div className={cn(
+                    "absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-black text-white shadow-lg border-2 border-white z-30",
+                    isFirst ? "bg-slate-900 min-w-[3rem] text-center" : "bg-slate-400"
+                )}>
+                    #{rank}
                 </div>
-            </Link>
+            </div>
+
+            {/* Info */}
+            <div className="text-center relative z-20 mb-2">
+                <h3 className={cn(
+                    "font-bold text-slate-800 leading-tight px-2 truncate w-full",
+                    isFirst ? "text-xl" : "text-sm"
+                )}>
+                    {data.name}
+                </h3>
+                <div className="flex items-center justify-center gap-1 mt-1">
+                    <Zap size={10} className={isFirst ? "text-amber-500 fill-amber-500" : "text-slate-400"} />
+                    <span className="font-mono font-bold text-xs text-slate-500">{data.votes.toLocaleString()}</span>
+                </div>
+            </div>
 
             {/* Podium Base */}
             <div className={cn(
@@ -288,7 +286,7 @@ function ContestantRow({ contestant, index, maxVotes }) {
                         </h4>
                         <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-mono border border-slate-200">
-                                UID-{contestant.id.toString().slice(0, 4)}
+                                ID-{contestant.number}
                             </span>
                         </div>
                     </div>

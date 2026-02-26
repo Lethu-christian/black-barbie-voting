@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import {
     Search, Trophy, Zap, Sparkles, Crown, ChevronRight,
-    Fingerprint, Activity, Globe, Star, ShieldCheck, Cpu, LayoutGrid, Image as ImageIcon, User
+    Fingerprint, Activity, Globe, Star, ShieldCheck, Cpu, LayoutGrid,
+    User, Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -18,7 +19,6 @@ export default function Home() {
     const [contestants, setContestants] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState(null);
     const { scrollY } = useScroll();
 
     // Advanced Parallax for background elements
@@ -47,33 +47,13 @@ export default function Home() {
         return () => { supabase.removeChannel(subscription); };
     }, []);
 
-    useEffect(() => {
-        // Check for current user
-        const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-        };
-        checkUser();
-
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-    };
-
     const filtered = contestants.filter(c =>
         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.number.toString().includes(searchTerm)
     );
 
     return (
-        <div className="min-h-screen bg-[#FDF2F8] text-slate-900 font-sans selection:bg-pink-500 selection:text-white overflow-x-hidden relative">
+        <div className="min-h-screen bg-[#FDF2F8] text-slate-900 font-sans selection:bg-pink-500 selection:text-white overflow-x-hidden relative pb-24 md:pb-0">
 
             {/* 0. ATMOSPHERIC BACKGROUND */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -114,7 +94,7 @@ export default function Home() {
                         </Link>
 
                         {/* Right Side: Telemetry & ADMIN LOGIN */}
-                        <div className="flex items-center gap-4">
+                        <div className="hidden md:flex items-center gap-4">
                             <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-white/50 rounded-full border border-white shadow-sm">
                                 <Activity size={14} className="text-pink-500" />
                                 <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase">
@@ -122,30 +102,16 @@ export default function Home() {
                                 </span>
                             </div>
 
-                            {/* VOTER LOGIN / PROFILE */}
-                            {user ? (
-                                <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 bg-pink-100 rounded-full border border-pink-200">
-                                    <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white text-[10px] font-black">
-                                        {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase()}
-                                    </div>
-                                    <span className="text-[9px] font-black text-pink-700 tracking-widest uppercase truncate max-w-[80px]">
-                                        {user.user_metadata?.full_name || 'VOTER'}
-                                    </span>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="text-[9px] font-black text-slate-400 hover:text-slate-600 tracking-widest uppercase transition-colors"
-                                    >
-                                        LOGOUT
-                                    </button>
-                                </div>
-                            ) : (
-                                <Link to="/voter-auth" className="hidden sm:flex items-center gap-2 group/login">
-                                    <div className="p-2 bg-pink-50 rounded-lg group-hover/login:bg-pink-100 transition-colors">
-                                        <User size={16} className="text-pink-600" />
-                                    </div>
-                                    <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase group-hover/login:text-pink-600 transition-colors">SIGN IN</span>
-                                </Link>
-                            )}
+                            {/* --- GALLERY LINK --- */}
+                            <Link to="/gallery">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="group relative flex items-center gap-2 px-5 py-2.5 bg-white overflow-hidden rounded-xl shadow-xl shadow-pink-100 transition-all border border-pink-100 font-black text-xs text-pink-600 tracking-widest"
+                                >
+                                    <Sparkles size={16} /> 2025 SEASON
+                                </motion.button>
+                            </Link>
 
                             {/* --- THE ADMIN LOGIN BUTTON --- */}
                             <Link to="/admin">
@@ -160,13 +126,21 @@ export default function Home() {
                                 </motion.button>
                             </Link>
                         </div>
+                        {/* Mobile Menu Toggle */}
+                        <div className="md:hidden">
+                            <Link to="/admin">
+                                <div className="p-2 bg-slate-100 rounded-full text-slate-500">
+                                    <ShieldCheck size={20} />
+                                </div>
+                            </Link>
+                        </div>
                     </div>
                 </header>
 
                 <main className="max-w-7xl mx-auto px-6 pt-12 pb-32">
 
                     {/* 2. HERO SECTION: Split Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-24">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-16 md:mb-24">
                         <div className="lg:col-span-7 space-y-8 relative">
                             {/* Decorative Line */}
                             <motion.div
@@ -199,7 +173,7 @@ export default function Home() {
                                 transition={{ delay: 0.2 }}
                                 className="text-lg md:text-xl text-slate-500 max-w-lg font-medium leading-relaxed"
                             >
-                                The ecosystem is live. Experience the next generation of pageantry with real-time telemetry and secure voting protocols powered by BLACK BARBIE BY TK.
+                                The ecosystem is live. Experience the next generation of pageantry with real-time telemetry and secure voting protocols.
                             </motion.p>
 
                             <motion.div
@@ -210,21 +184,21 @@ export default function Home() {
                             >
                                 <button
                                     onClick={() => document.getElementById('search-ui').scrollIntoView({ behavior: 'smooth' })}
-                                    className="px-8 py-4 bg-slate-900 text-white rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-2xl shadow-slate-400/50 hover:bg-slate-800 transition-colors"
+                                    className="px-8 py-4 bg-slate-900 text-white rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-2xl shadow-slate-400/50 hover:bg-slate-800 transition-colors w-full sm:w-auto justify-center sm:justify-start"
                                 >
                                     VOTE <ChevronRight size={16} />
                                 </button>
-                                <Link to="/leaderboard" className="px-8 py-4 bg-white text-slate-900 border border-slate-200 rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-sm hover:bg-slate-50 transition-colors">
+                                <Link to="/leaderboard" className="px-8 py-4 bg-white text-slate-900 border border-slate-200 rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-sm hover:bg-slate-50 transition-colors w-full sm:w-auto justify-center sm:justify-start">
                                     VIEW RANKINGS
                                 </Link>
-                                <Link to="/gallery" className="px-8 py-4 bg-pink-50 text-pink-600 border border-pink-200 rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-sm hover:bg-pink-100 transition-colors">
-                                    <ImageIcon size={18} /> 2025 SEASON
+                                <Link to="/gallery" className="px-8 py-4 bg-pink-50 text-pink-600 border border-pink-100 rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-sm hover:bg-pink-100 transition-colors w-full sm:w-auto justify-center sm:justify-start md:hidden">
+                                    <ImageIcon size={16} /> 2025 SEASON
                                 </Link>
                             </motion.div>
                         </div>
 
                         {/* 3D Floating Element */}
-                        <div className="lg:col-span-5 relative flex justify-center perspective-1000">
+                        <div className="lg:col-span-5 relative flex justify-center perspective-1000 mt-8 lg:mt-0">
                             <motion.div
                                 animate={{ y: [0, -25, 0], rotateY: [0, 5, 0] }}
                                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
@@ -234,30 +208,64 @@ export default function Home() {
                                 <img src="/logo-bba.png" className="w-full h-auto drop-shadow-2xl relative z-10" alt="3D Logo" />
 
                                 {/* Floating Badges */}
-                                <div className="absolute -right-4 top-10 bg-white/80 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-white/60 animate-bounce delay-700 BBA 2026!">
+                                <div className="absolute -right-4 top-10 bg-white/80 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-white/60 animate-bounce delay-700 hidden sm:block">
                                     <Crown size={24} className="text-yellow-500 fill-yellow-500" />
                                 </div>
                             </motion.div>
                         </div>
                     </div>
 
-                    {/* 3. LEADERBOARD PODIUM */}
+                    {/* 3. LEADERBOARD PODIUM - UPGRADED FOR MOBILE */}
                     <section className="mb-24 relative">
-                        <div className="flex items-end justify-between mb-12 px-2">
+                        <div className="flex items-end justify-between mb-8 md:mb-12 px-2">
                             <div>
                                 <h3 className="text-xs font-black text-pink-500 tracking-[0.3em] uppercase mb-2 flex items-center gap-2">
-                                    <Cpu size={14} /> Live Votes
+                                    <Cpu size={14} /> Live Database
                                 </h3>
                                 <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900">TOP CONTESTANTS</h2>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-12 gap-4 md:gap-8 h-[450px] items-end pb-8">
+                        {/* FORCED GRID FOR ALL SCREENS TO MAINTAIN PODIUM SHAPE */}
+                        <div className="grid grid-cols-3 gap-2 md:gap-8 h-[350px] md:h-[450px] items-end pb-8">
                             {loading ? <SkeletonLoader /> : (
                                 <>
-                                    {contestants[1] && <LeaderCard contestant={contestants[1]} rank={2} color="bg-slate-200" height="h-[75%]" delay={0.2} />}
-                                    {contestants[0] && <LeaderCard contestant={contestants[0]} rank={1} color="bg-gradient-to-b from-yellow-300 to-yellow-500" height="h-full" delay={0} isWinner />}
-                                    {contestants[2] && <LeaderCard contestant={contestants[2]} rank={3} color="bg-orange-200" height="h-[65%]" delay={0.3} />}
+                                    {/* Rank 2 - Left */}
+                                    {contestants[1] && (
+                                        <LeaderCard
+                                            contestant={contestants[1]}
+                                            rank={2}
+                                            color="bg-slate-200"
+                                            // Mobile: 60% height, Desktop: 75% height
+                                            height="h-[60%] md:h-[75%]"
+                                            delay={0.2}
+                                        />
+                                    )}
+
+                                    {/* Rank 1 - Center (Tallest) */}
+                                    {contestants[0] && (
+                                        <LeaderCard
+                                            contestant={contestants[0]}
+                                            rank={1}
+                                            color="bg-gradient-to-b from-yellow-300 to-yellow-500"
+                                            // Mobile: 85% height, Desktop: 100% height
+                                            height="h-[85%] md:h-full"
+                                            delay={0}
+                                            isWinner
+                                        />
+                                    )}
+
+                                    {/* Rank 3 - Right */}
+                                    {contestants[2] && (
+                                        <LeaderCard
+                                            contestant={contestants[2]}
+                                            rank={3}
+                                            color="bg-orange-200"
+                                            // Mobile: 50% height, Desktop: 65% height
+                                            height="h-[50%] md:h-[65%]"
+                                            delay={0.3}
+                                        />
+                                    )}
                                 </>
                             )}
                         </div>
@@ -288,7 +296,7 @@ export default function Home() {
                         </div>
 
                         {/* Results Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                             <AnimatePresence>
                                 {filtered.map((c) => (
                                     <ContestantCard key={c.id} data={c} />
@@ -306,6 +314,17 @@ export default function Home() {
                 </main>
             </div>
 
+            {/* Mobile Nav */}
+            <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] bg-slate-900/90 backdrop-blur-2xl text-white rounded-[2rem] p-2 shadow-2xl z-50 flex justify-between items-center border border-white/10 md:hidden">
+                <NavButton icon={<LayoutGrid size={20} />} active to="/" />
+                <button
+                    onClick={() => document.getElementById('search-ui').scrollIntoView({ behavior: 'smooth' })}
+                    className="p-3 rounded-2xl text-slate-400 hover:text-white"
+                >
+                    <Search size={20} />
+                </button>
+                <NavButton icon={<ShieldCheck size={20} />} to="/admin" />
+            </nav>
         </div>
     );
 }
@@ -318,25 +337,25 @@ function LeaderCard({ contestant, rank, color, delay, height, isWinner }) {
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay, type: "spring", stiffness: 120, damping: 20 }}
-            className={cn("col-span-4 flex flex-col items-center justify-end relative z-10", height)}
+            className={cn("col-span-1 flex flex-col items-center justify-end relative z-10", height)}
         >
             <Link to={`/contestant/${contestant.number}`} className="w-full h-full relative group perspective-500">
                 <div className={cn(
-                    "absolute inset-0 rounded-[2.5rem] shadow-2xl overflow-hidden border-4 border-white transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-pink-300/50",
-                    isWinner ? "ring-8 ring-yellow-400/20 z-20" : "grayscale-[30%] group-hover:grayscale-0"
+                    "absolute inset-0 rounded-[2rem] md:rounded-[2.5rem] shadow-xl overflow-hidden border-2 md:border-4 border-white transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-pink-300/50",
+                    isWinner ? "ring-4 md:ring-8 ring-yellow-400/20 z-20" : "grayscale-[20%] group-hover:grayscale-0"
                 )}>
                     <img src={contestant.image_url} className="w-full h-full object-cover" alt={contestant.name} />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
 
-                    <div className="absolute bottom-0 left-0 w-full p-6 text-center">
+                    <div className="absolute bottom-0 left-0 w-full p-2 md:p-6 text-center">
                         <div className={cn(
-                            "inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-2 shadow-lg",
+                            "inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1 md:mb-2 shadow-lg",
                             color, "text-slate-900"
                         )}>
                             Rank #{rank}
                         </div>
-                        <h4 className="text-white font-black text-lg md:text-xl tracking-tight truncate leading-none mb-1">{contestant.name}</h4>
-                        <p className="text-white/60 font-mono text-xs">{contestant.votes.toLocaleString()} Votes</p>
+                        <h4 className="text-white font-black text-xs md:text-xl tracking-tight truncate leading-none mb-0.5 md:mb-1">{contestant.name}</h4>
+                        <p className="text-white/60 font-mono text-[8px] md:text-xs">{contestant.votes.toLocaleString()} Votes</p>
                     </div>
                 </div>
             </Link>
@@ -351,39 +370,39 @@ function ContestantCard({ data }) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            whileHover={{ y: -12 }}
-            className="group relative"
+            whileHover={{ y: -8 }}
+            className="group relative col-span-1"
         >
             <Link to={`/contestant/${data.number}`}>
                 {/* Card Glass Container */}
-                <div className="bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-3 border border-white/60 shadow-lg hover:shadow-2xl hover:shadow-pink-200/60 transition-all duration-500">
+                <div className="bg-white/40 backdrop-blur-xl rounded-[2rem] p-2 md:p-3 border border-white/60 shadow-lg hover:shadow-2xl hover:shadow-pink-200/60 transition-all duration-500">
 
                     {/* Image Area */}
-                    <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden mb-4 shadow-inner bg-slate-100">
+                    <div className="relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden mb-2 md:mb-4 shadow-inner bg-slate-100">
                         <img src={data.image_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" alt={data.name} />
 
                         {/* ID Badge */}
-                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur text-slate-900 text-[10px] font-black px-3 py-1.5 rounded-full border border-white/50 tracking-widest shadow-lg">
+                        <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-white/90 backdrop-blur text-slate-900 text-[8px] md:text-[10px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-full border border-white/50 tracking-widest shadow-lg">
                             #{data.number.toString().padStart(3, '0')}
                         </div>
                     </div>
 
                     {/* Info Area */}
-                    <div className="px-2 pb-2">
-                        <h3 className="font-black text-slate-800 text-lg truncate tracking-tight">{data.name}</h3>
+                    <div className="px-1 md:px-2 pb-1 md:pb-2">
+                        <h3 className="font-black text-slate-800 text-sm md:text-lg truncate tracking-tight">{data.name}</h3>
 
-                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/50">
+                        <div className="flex justify-between items-center mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/50">
                             <div>
-                                <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Status</p>
-                                <div className="flex items-center gap-1.5">
+                                <p className="text-[8px] md:text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-0.5 md:mb-1">Status</p>
+                                <div className="flex items-center gap-1">
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                    <span className="text-xs font-bold text-slate-700">Active</span>
+                                    <span className="text-[10px] md:text-xs font-bold text-slate-700">Active</span>
                                 </div>
                             </div>
 
                             <div className="text-right">
-                                <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Total Votes</p>
-                                <p className="text-sm font-mono font-black text-pink-600">{data.votes}</p>
+                                <p className="text-[8px] md:text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-0.5 md:mb-1">Votes</p>
+                                <p className="text-xs md:text-sm font-mono font-black text-pink-600">{data.votes}</p>
                             </div>
                         </div>
                     </div>
@@ -393,19 +412,19 @@ function ContestantCard({ data }) {
     );
 }
 
-function NavButton({ icon, active }) {
+function NavButton({ icon, active, to }) {
     return (
-        <button className={cn(
+        <Link to={to} className={cn(
             "p-3 rounded-2xl transition-all active:scale-90",
             active ? "bg-white/20 text-white shadow-inner" : "text-slate-400 hover:text-white"
         )}>
             {icon}
-        </button>
+        </Link>
     )
 }
 
 function SkeletonLoader() {
     return [1, 2, 3].map(i => (
-        <div key={i} className="col-span-4 h-full bg-white/20 animate-pulse rounded-[2.5rem] border border-white/30" />
+        <div key={i} className="col-span-1 h-full bg-white/20 animate-pulse rounded-[2rem] border border-white/30" />
     ));
 }

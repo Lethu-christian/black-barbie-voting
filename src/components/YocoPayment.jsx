@@ -1,83 +1,90 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Loader2, CreditCard, Lock } from 'lucide-react';
+import { Loader2, CreditCard, ShieldCheck } from 'lucide-react';
 
-const YocoPayment = ({ amountInCents, contestantId, voteCount, onSuccess, voterId, voterEmail }) => {
+const YocoPayment = ({ amountInCents, contestantId, voteCount, onSuccess }) => {
     const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState('idle'); // idle | redirecting | verifying
+    const [status, setStatus] = useState('idle'); // idle | initializing | verifying
 
-    // AUTO-VERIFY: Check URL on load for return parameters from Yoco redirect
+    // AUTO-VERIFY: Check URL on load for Yoco return parameters
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        const checkoutId = params.get('checkoutId');
+        const isReturning = params.get('yoco_return') === '1';
+        const saved = JSON.parse(localStorage.getItem('pendingYocoVote') || '{}');
 
-        if (checkoutId && status === 'idle') {
-            verifyTransaction(checkoutId);
+        if (isReturning && saved.checkoutId && status === 'idle') {
+            verifyTransaction(saved.checkoutId);
         }
     }, []);
 
     const handlePay = async () => {
         setLoading(true);
-        setStatus('redirecting');
+        setStatus('initializing');
 
         try {
-            // 1. Ask Backend to create a secure Yoco checkout link
+            // 1. Initialize Yoco checkout via Edge Function
+            const returnUrl = window.location.origin + window.location.pathname + '?yoco_return=1';
+
             const { data, error } = await supabase.functions.invoke('verify-yoco', {
                 body: {
                     mode: 'create',
                     amountInCents,
-                    metadata: {
-                        voteCount,
-                        contestantId,
-                        voterId: voterId || 'guest',
-                        voterEmail: voterEmail || 'guest@example.com'
-                    },
-                    successUrl: window.location.href,
-                    cancelUrl: window.location.href,
+                    successUrl: returnUrl
                 }
             });
 
-            if (error) throw new Error(error.message);
+            // If Supabase returns an error (non-2xx), try to get the body
+            if (error) {
+                console.error("Edge function error object:", error);
+                let errorMsg = error.message;
+
+                // Try to see if it's a response error we can parse
+                if (error.context && typeof error.context.json === 'function') {
+                    try {
+                        const errData = await error.context.json();
+                        errorMsg = errData.error || errData.message || errorMsg;
+                    } catch (e) {
+                        console.error("Could not parse error context:", e);
+                    }
+                }
+                throw new Error(errorMsg);
+            }
+
             if (!data?.success || !data?.redirectUrl) {
-                throw new Error(data?.error || JSON.stringify(data) || 'No redirect URL returned');
+                const fullError = data ? JSON.stringify(data, null, 2) : 'No response data';
+                throw new Error(data?.error || `Failed to initialize payment. Details: ${fullError}`);
             }
 
             // 2. Save pending vote details to recover after redirect
-            localStorage.setItem('pendingVote', JSON.stringify({
+            localStorage.setItem('pendingYocoVote', JSON.stringify({
                 voteCount,
                 contestantId,
-                voterEmail: voterEmail || 'guest@example.com'
+                checkoutId: data.checkoutId
             }));
 
-            // 3. Redirect to Yoco's secure hosted payment page
+            // 3. Redirect to Yoco
             window.location.href = data.redirectUrl;
 
         } catch (err) {
-            alert("System Error: " + err.message);
+            console.error("Payment initialization error:", err);
+            alert("Payment initialization error: " + err.message);
             setLoading(false);
             setStatus('idle');
         }
     };
 
     const verifyTransaction = async (checkoutId) => {
-        let saved = JSON.parse(localStorage.getItem('pendingVote') || '{}');
-
-        // If localStorage was cleared/lost during redirect, try to recover from URL or metadata if possible
-        // but for now we rely on localStorage as the primary recovery mechanism.
+        const saved = JSON.parse(localStorage.getItem('pendingYocoVote') || '{}');
         if (!saved.contestantId) {
-            console.error("No pending vote found in localStorage");
-            // If we have checkoutId but no context, we might be stuck.
-            // In a more robust system, we would query the backend for the metadata associated with this checkoutId.
-            // For now, prompt the user.
-            alert("Verification context lost. Please refresh or contact support if votes aren't added.");
-            return;
+            console.warn("No pending vote found in localStorage");
         }
 
         setStatus('verifying');
         setLoading(true);
 
-        // Clean the checkoutId from the URL to keep it pretty
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // Clean the checkoutId from the URL
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
 
         try {
             const { data, error } = await supabase.functions.invoke('verify-yoco', {
@@ -86,43 +93,51 @@ const YocoPayment = ({ amountInCents, contestantId, voteCount, onSuccess, voterI
                     checkoutId,
                     contestantId: saved.contestantId,
                     voteCount: saved.voteCount,
-                    voterEmail: voterEmail || saved.voterEmail || 'guest@example.com'
                 }
             });
 
             if (error) throw error;
 
-            localStorage.removeItem('pendingVote');
+            localStorage.removeItem('pendingYocoVote');
+            setLoading(false);
+            setStatus('idle');
 
             if (data?.success) {
                 onSuccess();
-                alert(`SUCCESS! ${saved.voteCount} votes added!`);
+                alert(`SUCCESS! Your votes have been recorded.`);
             } else {
-                throw new Error(data?.error || "Payment verification failed");
+                alert("Payment verification failed: " + (data?.error || "Unknown error"));
             }
         } catch (err) {
-            console.error("Verification Error:", err);
-            alert("Payment check failed: " + err.message + ". Please contact support with your checkout ID.");
-        } finally {
+            console.error("Verification error:", err);
+            alert("Verification Error: " + err.message);
             setLoading(false);
             setStatus('idle');
         }
     };
 
     return (
-        <button
-            onClick={handlePay}
-            disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-pink-500/30 transform transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-80"
-        >
-            {status === 'redirecting' && <Loader2 className="animate-spin" />}
-            {status === 'verifying' && <Lock className="animate-bounce" />}
-            {status === 'idle' && <CreditCard size={20} />}
+        <div className="w-full space-y-4">
+            <button
+                onClick={handlePay}
+                disabled={loading}
+                className="w-full py-4 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-pink-500/30 transform transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-80"
+            >
+                {loading ? (
+                    <Loader2 className="animate-spin" />
+                ) : (
+                    <CreditCard size={20} />
+                )}
 
-            {status === 'redirecting' ? 'SECURING LINE...' :
-                status === 'verifying' ? 'FINALIZING VOTES...' :
-                    `PAY R${(amountInCents / 100).toFixed(2)}`}
-        </button>
+                {status === 'initializing' ? 'INITIALIZING...' :
+                    status === 'verifying' ? 'VERIFYING...' :
+                        `VOTE NOW (R${(amountInCents / 100).toFixed(2)})`}
+            </button>
+            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-mono">
+                <ShieldCheck size={12} className="text-emerald-500" />
+                SECURE YOCO GATEWAY
+            </div>
+        </div>
     );
 };
 

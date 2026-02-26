@@ -1,0 +1,5 @@
+[functions.verify-yoco]
+enabled = true
+verify_jwt = false
+import_map = "./functions/verify-yoco/deno.json"
+entrypoint = "./functions/verify-yoco/index.ts"

@@ -119,7 +119,7 @@ export default function Gallery() {
                     {/* Final CTA */}
                     <div className="mt-32 text-center">
                         <div className="h-20 w-px bg-pink-200 mx-auto mb-10" />
-                        <h3 className="text-2xl font-black text-slate-900 mb-8">VOTE FOR YOUR NEXT AMBASSADOR?</h3>
+                        <h3 className="text-2xl font-black text-slate-900 mb-8">WANT TO VOTE FOR YOUR NEXT AMBASSADOR?</h3>
                         <Link
                             to="/home"
                             className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-full font-black tracking-widest hover:bg-pink-600 transition-colors shadow-2xl shadow-pink-200"

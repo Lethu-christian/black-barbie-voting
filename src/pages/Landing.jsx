@@ -79,8 +79,8 @@ export default function Landing() {
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
                 {/* Floating Orbs - Hidden on mobile to save performance */}
-                <motion.div style={{ y: y1 }} className="absolute top-[-10%] right-[-10%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-pink-300/30 blur-[80px] md:blur-[100px] rounded-full mix-blend-multiply" />
-                <motion.div style={{ y: y2 }} className="absolute bottom-[10%] left-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-purple-300/30 blur-[80px] md:blur-[100px] rounded-full mix-blend-multiply" />
+                <motion.div style={{ y: y1 }} className="hidden md:block absolute top-[-10%] right-[-10%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-pink-300/30 blur-[80px] md:blur-[100px] rounded-full mix-blend-multiply" />
+                <motion.div style={{ y: y2 }} className="hidden md:block absolute bottom-[10%] left-[-10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-purple-300/30 blur-[80px] md:blur-[100px] rounded-full mix-blend-multiply" />
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
             </div>
 
@@ -113,7 +113,7 @@ export default function Landing() {
                     transition={{ delay: 0.2 }}
                     className="text-5xl md:text-8xl font-black tracking-tighter text-slate-900 mb-6 leading-[0.9]"
                 >
-                    THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">BBA</span>  <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">JOURNEY</span>
+                    THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">BBA</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">JOURNEY</span>
                 </motion.h1>
 
                 <motion.p
@@ -141,12 +141,6 @@ export default function Landing() {
                             <LayoutGrid size={20} /> ENTER VOTING ARENA <ArrowRight size={20} />
                         </span>
                     </Link>
-
-                    <div className="mt-8">
-                        <Link to="/voter-auth" className="text-xs font-black text-slate-400 hover:text-pink-600 tracking-[0.3em] uppercase transition-colors flex items-center justify-center gap-2">
-                            <User size={14} /> Account Login
-                        </Link>
-                    </div>
                 </motion.div>
 
                 <motion.div
@@ -162,8 +156,8 @@ export default function Landing() {
             <div className="relative z-10 pb-40 overflow-hidden">
                 <div className="max-w-4xl mx-auto relative px-4 md:px-0">
 
-                    {/* THE SNAKE LINE (All Screen Sizes) */}
-                    <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none">
+                    {/* THE SNAKE LINE (Hidden on Mobile) */}
+                    <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none hidden md:block">
                         <svg className="w-full h-full visible" preserveAspectRatio="none" viewBox="0 0 800 1600">
                             <defs>
                                 <linearGradient id="snakeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -188,9 +182,11 @@ export default function Landing() {
                         </svg>
                     </div>
 
+                    {/* Vertical Line for Mobile */}
+                    <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1 bg-gradient-to-b from-pink-500/0 via-purple-500/50 to-yellow-500/0 md:hidden pointer-events-none" />
 
                     {/* NODES */}
-                    <div className="relative h-[1500px] pt-10 md:pt-0">
+                    <div className="relative h-auto md:h-[1500px] pt-10 md:pt-0 flex flex-col items-center gap-20 md:block">
                         {STEPS.map((step, index) => (
                             <JourneyCard key={step.id} step={step} index={index} />
                         ))}
@@ -218,15 +214,15 @@ export default function Landing() {
 
 function JourneyCard({ step, index }) {
     // Positioning logic:
-    // Mobile: Always centered relative to container
+    // Mobile: Relative stacking (handled by flex-col in parent)
     // Desktop: Uses absolute positioning for the snake layout
 
-    let positionClass = "absolute ";
-    if (index === 0) positionClass += "top-0 left-1/2 -translate-x-1/2";
-    else if (index === 1) positionClass += "top-[300px] left-2 md:left-10";
-    else if (index === 2) positionClass += "top-[700px] right-2 md:right-10";
-    else if (index === 3) positionClass += "top-[1100px] left-2 md:left-10";
-    else if (index === 4) positionClass += "top-[1400px] left-1/2 -translate-x-1/2";
+    let positionClass = "md:absolute relative ";
+    if (index === 0) positionClass += "md:top-0 md:left-1/2 md:-translate-x-1/2";
+    else if (index === 1) positionClass += "md:top-[300px] md:left-10";
+    else if (index === 2) positionClass += "md:top-[700px] md:right-10";
+    else if (index === 3) positionClass += "md:top-[1100px] md:left-10";
+    else if (index === 4) positionClass += "md:top-[1400px] md:left-1/2 md:-translate-x-1/2";
 
     const isGrand = step.isGrand;
 
