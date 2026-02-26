@@ -400,10 +400,7 @@ function ContestantCard({ data }) {
                                 </div>
                             </div>
 
-                            <div className="text-right">
-                                <p className="text-[8px] md:text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-0.5 md:mb-1">Votes</p>
-                                <p className="text-xs md:text-sm font-mono font-black text-pink-600">{data.votes}</p>
-                            </div>
+
                         </div>
                     </div>
                 </div>
