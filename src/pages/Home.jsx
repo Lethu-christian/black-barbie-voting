@@ -97,9 +97,7 @@ export default function Home() {
                         <div className="hidden md:flex items-center gap-4">
                             <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-white/50 rounded-full border border-white shadow-sm">
                                 <Activity size={14} className="text-pink-500" />
-                                <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase">
-                                    Votes: {contestants.reduce((acc, curr) => acc + curr.votes, 0).toLocaleString()}
-                                </span>
+
                             </div>
 
                             {/* --- GALLERY LINK --- */}
@@ -400,7 +398,10 @@ function ContestantCard({ data }) {
                                 </div>
                             </div>
 
-
+                            <div className="text-right">
+                                <p className="text-[8px] md:text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-0.5 md:mb-1">Votes</p>
+                                <p className="text-xs md:text-sm font-mono font-black text-pink-600">{data.votes}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
