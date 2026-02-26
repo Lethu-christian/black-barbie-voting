@@ -13,15 +13,33 @@ export default function ContestantDetails() {
     const [email, setEmail] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     useEffect(() => {
         fetchContestant();
     }, [id]);
 
     const fetchContestant = async () => {
-        const { data, error } = await supabase.from('contestants').select('*').eq('number', id).single();
-        if (error) console.error("Error:", error);
-        setContestant(data);
+        console.log("Fetching contestant with ID:", id);
+
+        // Ensure id is treated as a number since 'number' column is likely an integer in DB
+        const numericId = parseInt(id, 10);
+        if (isNaN(numericId)) {
+            setHasError(true);
+            return;
+        }
+
+        const { data, error } = await supabase.from('contestants').select('*').eq('number', numericId).single();
+        if (error) {
+            console.error("Supabase Fetch Error:", error);
+            setHasError(true);
+        } else if (!data) {
+            console.warn("No contestant found with number:", numericId);
+            setHasError(true);
+        } else {
+            setContestant(data);
+            setHasError(false);
+        }
     };
 
     const totalAmountZAR = (Number(votes) || 0) * 2;
@@ -34,6 +52,21 @@ export default function ContestantDetails() {
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 5000); // Hide success message after 5s
     };
+
+    if (hasError) return (
+        <div className="min-h-screen flex items-center justify-center bg-[#FDF2F8]">
+            <div className="flex flex-col items-center gap-4 text-center">
+                <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-rose-500 mb-2 shadow-inner">
+                    <span className="font-black text-3xl">!</span>
+                </div>
+                <h2 className="text-2xl font-black text-slate-800">Contestant Not Found</h2>
+                <p className="text-sm text-slate-500 max-w-xs">We couldn't locate this profile. Please return to the homepage and try again.</p>
+                <Link to="/home" className="mt-4 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors">
+                    Return Home
+                </Link>
+            </div>
+        </div>
+    );
 
     if (!contestant) return (
         <div className="min-h-screen flex items-center justify-center bg-[#FDF2F8]">

@@ -134,8 +134,8 @@ export default function Admin() {
     const [isAddingGallery, setIsAddingGallery] = useState(false);
     const [editingContestant, setEditingContestant] = useState(null);
     const [editingGallery, setEditingGallery] = useState(null);
-    const [newC, setNewC] = useState({ name: '', number: '', bio: '', image_url: '' });
-    const [newG, setNewG] = useState({ title: '', desc: '', url: '' });
+    const [newC, setNewC] = useState({ name: '', number: '', bio: '', image_url: '', imageFile: null });
+    const [newG, setNewG] = useState({ title: '', desc: '', url: '', imageFile: null });
 
     // --- LOGIC (UNCHANGED) ---
     useEffect(() => {
@@ -185,16 +185,40 @@ export default function Admin() {
         navigate('/login');
     };
 
+    const uploadImage = async (file) => {
+        if (!file) return null;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('images')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            console.error('Upload error:', uploadError);
+            throw uploadError;
+        }
+
+        const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+        return data.publicUrl;
+    };
+
     const handleAddContestant = async () => {
-        if (!newC.name || !newC.number) return alert("Required fields missing");
+        if (!newC.name || !newC.number || (!newC.image_url && !newC.imageFile)) return alert("Required fields missing");
         setLoading(true);
         try {
+            let finalImageUrl = newC.image_url;
+            if (newC.imageFile) {
+                finalImageUrl = await uploadImage(newC.imageFile);
+            }
+
             const { error } = await supabase.from('contestants').insert({
                 name: newC.name, number: parseInt(newC.number), bio: newC.bio,
-                image_url: newC.image_url || 'https://via.placeholder.com/400', votes: 0
+                image_url: finalImageUrl || 'https://via.placeholder.com/400', votes: 0
             });
             if (!error) {
-                setNewC({ name: '', number: '', bio: '', image_url: '' });
+                setNewC({ name: '', number: '', bio: '', image_url: '', imageFile: null });
                 setIsAdding(false);
                 await fetchData();
             } else {
@@ -206,9 +230,14 @@ export default function Admin() {
     const handleUpdateContestant = async () => {
         setLoading(true);
         try {
+            let finalImageUrl = editingContestant.image_url;
+            if (editingContestant.imageFile) {
+                finalImageUrl = await uploadImage(editingContestant.imageFile);
+            }
+
             const { error } = await supabase.from('contestants').update({
                 name: editingContestant.name, number: parseInt(editingContestant.number),
-                bio: editingContestant.bio, image_url: editingContestant.image_url
+                bio: editingContestant.bio, image_url: finalImageUrl
             }).eq('id', editingContestant.id);
             if (!error) {
                 setEditingContestant(null);
@@ -228,12 +257,17 @@ export default function Admin() {
     };
 
     const handleAddGallery = async () => {
-        if (!newG.title || !newG.url) return alert("Title and URL required");
+        if (!newG.title || (!newG.url && !newG.imageFile)) return alert("Title and Image required");
         setLoading(true);
         try {
-            const { error } = await supabase.from('gallery').insert([newG]);
+            let finalImageUrl = newG.url;
+            if (newG.imageFile) {
+                finalImageUrl = await uploadImage(newG.imageFile);
+            }
+
+            const { error } = await supabase.from('gallery').insert([{ ...newG, url: finalImageUrl, imageFile: undefined }]);
             if (!error) {
-                setNewG({ title: '', desc: '', url: '' });
+                setNewG({ title: '', desc: '', url: '', imageFile: null });
                 setIsAddingGallery(false);
                 await fetchData();
             } else { alert(error.message); }
@@ -243,8 +277,13 @@ export default function Admin() {
     const handleUpdateGallery = async () => {
         setLoading(true);
         try {
+            let finalImageUrl = editingGallery.url;
+            if (editingGallery.imageFile) {
+                finalImageUrl = await uploadImage(editingGallery.imageFile);
+            }
+
             const { error } = await supabase.from('gallery').update({
-                title: editingGallery.title, desc: editingGallery.desc, url: editingGallery.url
+                title: editingGallery.title, desc: editingGallery.desc, url: finalImageUrl
             }).eq('id', editingGallery.id);
             if (!error) {
                 setEditingGallery(null);
@@ -295,10 +334,10 @@ export default function Admin() {
                 <div className="absolute top-[20%] right-[20%] w-[20%] h-[20%] rounded-full bg-pink-300/20 blur-[80px]" />
             </div>
 
-            {/* --- SIDEBAR --- */}
-            <aside className="w-20 lg:w-80 bg-slate-900/95 backdrop-blur-xl text-white flex flex-col transition-all duration-300 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.2)] border-r border-white/5 relative">
-                {/* Logo Area */}
-                <div className="h-32 flex flex-col justify-center px-8 border-b border-white/5 bg-gradient-to-b from-slate-800/50 to-transparent">
+            {/* --- SIDEBAR / BOTTOM NAV --- */}
+            <aside className="w-full md:w-20 lg:w-80 bg-slate-900/95 backdrop-blur-xl text-white flex flex-row md:flex-col transition-all duration-300 z-[60] shadow-[0_-4px_24px_rgba(0,0,0,0.2)] md:shadow-[4px_0_24px_rgba(0,0,0,0.2)] border-t md:border-t-0 md:border-r border-white/5 fixed bottom-0 left-0 right-0 md:relative md:bottom-auto h-20 md:h-auto">
+                {/* Logo Area (Hidden on Mobile) */}
+                <div className="hidden md:flex h-32 flex-col justify-center px-8 border-b border-white/5 bg-gradient-to-b from-slate-800/50 to-transparent">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center shrink-0 shadow-lg shadow-pink-500/30">
                             <span className="font-black text-xl italic">B</span>
@@ -311,7 +350,7 @@ export default function Admin() {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 py-10 px-6 space-y-3">
+                <nav className="flex-1 flex flex-row md:flex-col justify-around md:justify-start items-center md:items-stretch py-2 md:py-10 px-2 md:px-6 md:space-y-3 w-full">
                     {[
                         { id: 'analytics', icon: LayoutDashboard, label: 'Overview' },
                         { id: 'contestants', icon: Users, label: 'Contestants' },
@@ -321,23 +360,23 @@ export default function Admin() {
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
-                            className={`w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] transition-all duration-300 group relative overflow-hidden ${activeTab === item.id
-                                ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-xl shadow-pink-600/20 ring-1 ring-white/20'
-                                : 'text-slate-400 hover:bg-white/5 hover:text-white hover:pl-6'
+                            className={`flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-4 px-2 md:px-5 py-2 md:py-4 rounded-2xl md:rounded-[1.25rem] transition-all duration-300 group relative overflow-hidden flex-1 md:flex-none ${activeTab === item.id
+                                ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-lg md:shadow-xl shadow-pink-600/20 ring-1 ring-white/20'
+                                : 'text-slate-400 hover:bg-white/5 hover:text-white hover:pl-2 md:hover:pl-6'
                                 }`}
                         >
                             <item.icon size={20} className={`relative z-10 transition-transform duration-300 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-110'}`} strokeWidth={2} />
-                            <span className="font-bold tracking-wide relative z-10 hidden lg:block text-sm">{item.label}</span>
+                            <span className="font-bold tracking-wide relative z-10 hidden md:block lg:block text-[10px] md:text-sm mt-1 md:mt-0">{item.label}</span>
 
                             {activeTab === item.id && (
-                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay hidden md:block"></div>
                             )}
                         </button>
                     ))}
                 </nav>
 
-                {/* Footer User Profile */}
-                <div className="p-6 border-t border-white/5 bg-slate-950/30">
+                {/* Footer User Profile (Hidden on Mobile) */}
+                <div className="hidden md:block p-6 border-t border-white/5 bg-slate-950/30">
                     <div className="flex items-center gap-4 mb-4 hidden lg:flex">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 p-[2px]">
                             <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-xs font-bold">
@@ -360,24 +399,24 @@ export default function Admin() {
             </aside>
 
             {/* --- MAIN CONTENT AREA --- */}
-            <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+            <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 pb-20 md:pb-0">
 
                 {/* Glass Header */}
-                <header className="h-28 flex items-center justify-between px-10 z-40 sticky top-0 transition-all duration-300">
+                <header className="h-20 md:h-28 flex items-center justify-between px-4 md:px-10 z-40 sticky top-0 transition-all duration-300 backdrop-blur-md bg-[#fff0f5]/80 md:bg-transparent">
                     <div className="flex flex-col">
-                        <h2 className="text-4xl font-black text-slate-800 capitalize tracking-tight drop-shadow-sm">
+                        <h2 className="text-2xl md:text-4xl font-black text-slate-800 capitalize tracking-tight drop-shadow-sm">
                             {activeTab}
                         </h2>
-                        <p className="text-slate-500 font-medium text-sm mt-1 flex items-center gap-2">
-                            Welcome back, Admin
-                            <span className="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 text-[10px] font-bold uppercase tracking-wide border border-pink-200">
+                        <p className="text-slate-500 font-medium text-xs md:text-sm mt-0.5 md:mt-1 flex items-center gap-2">
+                            Welcome, Admin
+                            <span className="hidden md:inline-block px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 text-[10px] font-bold uppercase tracking-wide border border-pink-200">
                                 Super User
                             </span>
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        {/* Search Bar */}
+                    <div className="flex items-center gap-3 md:gap-6">
+                        {/* Search Bar - Hidden on Mobile */}
                         <div className="hidden md:flex items-center bg-white/60 backdrop-blur-md rounded-[1.25rem] px-5 py-3.5 border border-white shadow-sm focus-within:ring-4 focus-within:ring-pink-500/10 focus-within:border-pink-300 transition-all w-96 group hover:shadow-lg hover:shadow-pink-500/5">
                             <Search size={20} className="text-slate-400 group-focus-within:text-pink-500 transition-colors" />
                             <input
@@ -391,15 +430,20 @@ export default function Admin() {
                         </div>
 
                         {/* Notifications */}
-                        <button className="relative p-3.5 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-white text-slate-400 hover:text-pink-600 hover:bg-white hover:scale-105 transition-all">
-                            <Bell size={22} />
-                            <span className="absolute top-3 right-3.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-bounce"></span>
+                        <button className="relative p-2.5 md:p-3.5 bg-white/60 backdrop-blur-md rounded-xl md:rounded-2xl shadow-sm border border-white text-slate-400 hover:text-pink-600 hover:bg-white transition-all">
+                            <Bell size={20} className="md:w-[22px] md:h-[22px]" />
+                            <span className="absolute top-2.5 md:top-3 right-2.5 md:right-3.5 w-2 md:w-2.5 h-2 md:h-2.5 bg-rose-500 rounded-full border-2 border-white animate-bounce"></span>
+                        </button>
+
+                        {/* Logout button (Mobile only) */}
+                        <button onClick={handleLogout} className="md:hidden p-2.5 bg-white/60 backdrop-blur-md rounded-xl shadow-sm border border-white text-rose-400 hover:bg-rose-50 transition-all">
+                            <LogOut size={20} />
                         </button>
                     </div>
                 </header>
 
                 {/* Scrollable Content Canvas */}
-                <div className="flex-1 overflow-y-auto p-10 pt-2 relative scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto p-4 md:p-10 pt-2 pb-6 md:pb-10 relative scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-transparent">
 
                     {activeTab === 'analytics' && (
                         <div className="space-y-10 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -411,17 +455,17 @@ export default function Admin() {
                                 <KPICard title="Activity" value={stats.recentCount} subtext="Trans. (7d)" icon={Activity} colorClass="text-amber-500" delay={300} />
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[500px]">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[500px]">
                                 {/* Chart Section */}
-                                <div className="lg:col-span-2 bg-white/60 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-white/60 shadow-xl shadow-pink-900/5 flex flex-col relative overflow-hidden group">
-                                    <div className="flex justify-between items-center mb-8 relative z-10">
+                                <div className="lg:col-span-2 bg-white/60 backdrop-blur-2xl p-6 md:p-10 rounded-[2.5rem] border border-white/60 shadow-xl shadow-pink-900/5 flex flex-col relative overflow-hidden group h-96 lg:h-auto">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 relative z-10">
                                         <div>
-                                            <h3 className="font-black text-2xl text-slate-800 tracking-tight">Financial Velocity</h3>
-                                            <p className="text-slate-400 text-sm font-medium mt-1">Real-time transaction monitoring</p>
+                                            <h3 className="font-black text-xl md:text-2xl text-slate-800 tracking-tight">Financial Velocity</h3>
+                                            <p className="text-slate-400 text-xs md:text-sm font-medium mt-1">Real-time transaction monitoring</p>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                             {['1W', '1M', '1Y', 'ALL'].map(range => (
-                                                <button key={range} className="px-4 py-2 rounded-xl text-xs font-bold bg-white border border-slate-100 text-slate-500 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-all">
+                                                <button key={range} className="flex-1 sm:flex-none px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-bold bg-white border border-slate-100 text-slate-500 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-all">
                                                     {range}
                                                 </button>
                                             ))}
@@ -445,7 +489,7 @@ export default function Admin() {
                                                 <Star size={16} className="text-yellow-400 fill-yellow-400" />
                                                 <span className="text-xs font-bold text-yellow-400 uppercase tracking-widest">#1 Ranked</span>
                                             </div>
-                                            <h3 className="font-black text-3xl tracking-tight">Top Model</h3>
+                                            <h3 className="font-black text-2xl md:text-3xl tracking-tight">Top Model</h3>
                                         </div>
                                         <button className="p-3 bg-white/10 rounded-2xl backdrop-blur-md hover:bg-white/20 transition-all border border-white/10">
                                             <MoreHorizontal size={20} />
@@ -546,37 +590,37 @@ export default function Admin() {
                     )}
 
                     {activeTab === 'transactions' && (
-                        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 relative z-10">
-                            <div className="flex justify-between items-center bg-white/70 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/60 shadow-lg shadow-pink-900/5">
+                        <div className="max-w-[1600px] mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 relative z-10">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 backdrop-blur-2xl p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-white/60 shadow-lg shadow-pink-900/5">
                                 <div>
-                                    <h2 className="font-black text-3xl text-slate-800 tracking-tight">Financial Ledger</h2>
-                                    <p className="text-slate-400 text-sm font-medium mt-1">Live transaction feed</p>
+                                    <h2 className="font-black text-2xl md:text-3xl text-slate-800 tracking-tight">Financial Ledger</h2>
+                                    <p className="text-slate-400 text-xs md:text-sm font-medium mt-1">Live transaction feed</p>
                                 </div>
-                                <button className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-pink-600 bg-white px-6 py-4 rounded-2xl border border-slate-200 hover:border-pink-200 shadow-sm hover:shadow-lg transition-all uppercase tracking-wider">
+                                <button className="w-full md:w-auto flex items-center justify-center gap-2 text-xs font-bold text-slate-600 hover:text-pink-600 bg-white px-6 py-3.5 md:py-4 rounded-xl md:rounded-2xl border border-slate-200 hover:border-pink-200 shadow-sm hover:shadow-lg transition-all uppercase tracking-wider">
                                     <Download size={16} /> Export CSV
                                 </button>
                             </div>
 
-                            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-white/60 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.03)] overflow-hidden">
-                                <div className="overflow-x-auto">
+                            <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] md:rounded-[2.5rem] border border-white/60 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.03)] overflow-hidden">
+                                <div className="overflow-x-auto w-full pb-4">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="bg-slate-50/80 border-b border-slate-100 text-xs uppercase tracking-widest text-slate-400 font-bold">
-                                                <th className="p-8 pl-10">Transaction Ref</th>
-                                                <th className="p-8">Payer</th>
-                                                <th className="p-8">Votes</th>
-                                                <th className="p-8">Value</th>
-                                                <th className="p-8">Status</th>
-                                                <th className="p-8 text-right pr-10">Timestamp</th>
+                                            <tr className="bg-slate-50/80 border-b border-slate-100 text-[10px] md:text-xs uppercase tracking-widest text-slate-400 font-bold">
+                                                <th className="p-4 md:p-8 pl-6 md:pl-10 whitespace-nowrap">Transaction Ref</th>
+                                                <th className="p-4 md:p-8 whitespace-nowrap">Payer</th>
+                                                <th className="p-4 md:p-8 whitespace-nowrap">Votes</th>
+                                                <th className="p-4 md:p-8 whitespace-nowrap">Value</th>
+                                                <th className="p-4 md:p-8 whitespace-nowrap">Status</th>
+                                                <th className="p-4 md:p-8 text-right pr-6 md:pr-10 whitespace-nowrap">Timestamp</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {filteredTransactions.map((t) => (
                                                 <tr key={t.id} className="hover:bg-pink-50/40 transition-colors group">
-                                                    <td className="p-8 pl-10 font-mono text-xs font-bold text-slate-500">
+                                                    <td className="p-4 md:p-8 pl-6 md:pl-10 font-mono text-xs font-bold text-slate-500 whitespace-nowrap">
                                                         <span className="bg-slate-100 px-2 py-1 rounded-md text-slate-600 group-hover:bg-white group-hover:shadow-sm transition-all">#{t.reference?.substring(0, 8)}</span>
                                                     </td>
-                                                    <td className="p-8">
+                                                    <td className="p-4 md:p-8 whitespace-nowrap">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-400 to-rose-400 flex items-center justify-center text-white text-xs font-bold">
                                                                 {t.email?.charAt(0).toUpperCase()}
@@ -584,18 +628,18 @@ export default function Admin() {
                                                             <span className="font-bold text-slate-700">{t.email}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="p-8">
-                                                        <span className="bg-white text-pink-600 px-4 py-1.5 rounded-lg text-xs font-black border border-pink-100 shadow-sm group-hover:scale-105 transition-transform inline-block">
+                                                    <td className="p-4 md:p-8 whitespace-nowrap">
+                                                        <span className="bg-white text-pink-600 px-3 md:px-4 py-1 md:py-1.5 rounded-lg text-xs font-black border border-pink-100 shadow-sm group-hover:scale-105 transition-transform inline-block">
                                                             +{t.votes_purchased}
                                                         </span>
                                                     </td>
-                                                    <td className="p-8 font-black text-slate-800 text-lg">R{t.amount}</td>
-                                                    <td className="p-8">
-                                                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-100/50 text-emerald-700 border border-emerald-200/50">
+                                                    <td className="p-4 md:p-8 font-black text-slate-800 text-base md:text-lg whitespace-nowrap">R{t.amount}</td>
+                                                    <td className="p-4 md:p-8 whitespace-nowrap">
+                                                        <span className="inline-flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wide bg-emerald-100/50 text-emerald-700 border border-emerald-200/50">
                                                             <ShieldCheck size={12} /> Verified
                                                         </span>
                                                     </td>
-                                                    <td className="p-8 text-right pr-10 text-sm text-slate-400 font-medium">
+                                                    <td className="p-4 md:p-8 text-right pr-6 md:pr-10 text-xs md:text-sm text-slate-400 font-medium whitespace-nowrap">
                                                         {new Date(t.created_at).toLocaleDateString()} <span className="text-slate-300 mx-1">•</span> {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </td>
                                                 </tr>
@@ -658,20 +702,20 @@ export default function Admin() {
                         onClick={() => { setIsAdding(false); setEditingContestant(null); setIsAddingGallery(false); setEditingGallery(null); }}
                     />
 
-                    <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20">
+                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl w-full max-w-[95%] md:max-w-lg max-h-[90vh] overflow-y-auto relative z-10 animate-in zoom-in-95 duration-300 border border-white/20 scrollbar-thin scrollbar-thumb-slate-200">
                         {/* Modal Content - Dynamic Form Rendering */}
                         {((isAdding || editingContestant) ? (
                             <>
-                                <div className="px-8 py-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <div className="px-6 md:px-8 py-6 md:py-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center sticky top-0 z-20 backdrop-blur-md">
                                     <div>
-                                        <h3 className="font-black text-2xl text-slate-800 tracking-tight">{isAdding ? 'New Talent' : 'Edit Profile'}</h3>
-                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Database Management</p>
+                                        <h3 className="font-black text-xl md:text-2xl text-slate-800 tracking-tight">{isAdding ? 'New Talent' : 'Edit Profile'}</h3>
+                                        <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Database Management</p>
                                     </div>
-                                    <button onClick={() => { setIsAdding(false); setEditingContestant(null); }} className="p-2.5 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors shadow-sm border border-slate-100"><X size={20} /></button>
+                                    <button onClick={() => { setIsAdding(false); setEditingContestant(null); }} className="p-2 md:p-2.5 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors shadow-sm border border-slate-100"><X size={20} /></button>
                                 </div>
-                                <div className="p-8 space-y-6">
-                                    <div className="grid grid-cols-3 gap-6">
-                                        <div className="col-span-2 space-y-2">
+                                <div className="p-6 md:p-8 space-y-5 md:space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+                                        <div className="md:col-span-2 space-y-2">
                                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
                                             <input className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-bold text-slate-700"
                                                 placeholder="e.g. Jane Doe"
@@ -687,14 +731,19 @@ export default function Admin() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Image URL</label>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Profile Image</label>
                                         <div className="relative">
                                             <ImageIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                            <input className="w-full pl-12 pr-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all text-sm font-semibold text-slate-600"
-                                                placeholder="https://..."
-                                                value={isAdding ? newC.image_url : editingContestant.image_url}
-                                                onChange={e => isAdding ? setNewC({ ...newC, image_url: e.target.value }) : setEditingContestant({ ...editingContestant, image_url: e.target.value })} />
+                                            <input type="file" accept="image/*"
+                                                className="w-full pl-12 pr-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all text-sm font-semibold text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-600 hover:file:bg-pink-100"
+                                                onChange={e => {
+                                                    const file = e.target.files[0];
+                                                    isAdding ? setNewC({ ...newC, imageFile: file }) : setEditingContestant({ ...editingContestant, imageFile: file })
+                                                }} />
                                         </div>
+                                        {((isAdding ? newC.image_url : editingContestant.image_url) && !(isAdding ? newC.imageFile : editingContestant.imageFile)) && (
+                                            <p className="text-xs text-slate-400 mt-2 truncate">Current: {isAdding ? newC.image_url : editingContestant.image_url}</p>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Biography</label>
@@ -711,15 +760,15 @@ export default function Admin() {
                             </>
                         ) : (
                             <>
-                                {/* Gallery Modal Content (Reusing structure for consistency) */}
-                                <div className="px-8 py-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                {/* Gallery Modal Content */}
+                                <div className="px-6 md:px-8 py-6 md:py-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center sticky top-0 z-20 backdrop-blur-md">
                                     <div>
-                                        <h3 className="font-black text-2xl text-slate-800 tracking-tight">{isAddingGallery ? 'New Image' : 'Edit Image'}</h3>
-                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Gallery System</p>
+                                        <h3 className="font-black text-xl md:text-2xl text-slate-800 tracking-tight">{isAddingGallery ? 'New Image' : 'Edit Image'}</h3>
+                                        <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Gallery System</p>
                                     </div>
-                                    <button onClick={() => { setIsAddingGallery(false); setEditingGallery(null); }} className="p-2.5 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors shadow-sm border border-slate-100"><X size={20} /></button>
+                                    <button onClick={() => { setIsAddingGallery(false); setEditingGallery(null); }} className="p-2 md:p-2.5 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors shadow-sm border border-slate-100"><X size={20} /></button>
                                 </div>
-                                <div className="p-8 space-y-6">
+                                <div className="p-6 md:p-8 space-y-5 md:space-y-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Title</label>
                                         <input className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-bold text-slate-700"
@@ -727,10 +776,16 @@ export default function Admin() {
                                             onChange={e => isAddingGallery ? setNewG({ ...newG, title: e.target.value }) : setEditingGallery({ ...editingGallery, title: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">URL</label>
-                                        <input className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all text-sm font-semibold text-slate-600"
-                                            value={isAddingGallery ? newG.url : editingGallery.url}
-                                            onChange={e => isAddingGallery ? setNewG({ ...newG, url: e.target.value }) : setEditingGallery({ ...editingGallery, url: e.target.value })} />
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Image File</label>
+                                        <input type="file" accept="image/*"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all text-sm font-semibold text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-600 hover:file:bg-pink-100"
+                                            onChange={e => {
+                                                const file = e.target.files[0];
+                                                isAddingGallery ? setNewG({ ...newG, imageFile: file }) : setEditingGallery({ ...editingGallery, imageFile: file })
+                                            }} />
+                                        {((isAddingGallery ? newG.url : editingGallery.url) && !(isAddingGallery ? newG.imageFile : editingGallery.imageFile)) && (
+                                            <p className="text-xs text-slate-400 mt-2 truncate">Current: {isAddingGallery ? newG.url : editingGallery.url}</p>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Description</label>
