@@ -93,7 +93,9 @@ export default function Home() {
                             </div>
                         </Link>
 
-               
+                        {/* Right Side: Telemetry & ADMIN LOGIN */}
+                        <div className="hidden md:flex items-center gap-4">
+
                             {/* --- GALLERY LINK --- */}
                             <Link to="/gallery">
                                 <motion.button
@@ -304,10 +306,10 @@ export default function Home() {
                         )}
                     </div>
                 </main>
-            </div >
+            </div>
 
-        {/* Mobile Nav */ }
-        < nav className = "fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] bg-slate-900/90 backdrop-blur-2xl text-white rounded-[2rem] p-2 shadow-2xl z-50 flex justify-between items-center border border-white/10 md:hidden" >
+            {/* Mobile Nav */}
+            <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] bg-slate-900/90 backdrop-blur-2xl text-white rounded-[2rem] p-2 shadow-2xl z-50 flex justify-between items-center border border-white/10 md:hidden">
                 <NavButton icon={<LayoutGrid size={20} />} active to="/" />
                 <button
                     onClick={() => document.getElementById('search-ui').scrollIntoView({ behavior: 'smooth' })}
@@ -316,8 +318,8 @@ export default function Home() {
                     <Search size={20} />
                 </button>
                 <NavButton icon={<ShieldCheck size={20} />} to="/admin" />
-            </nav >
-        </div >
+            </nav>
+        </div>
     );
 }
 
