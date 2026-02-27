@@ -38,11 +38,11 @@ const CategorySlideshow = ({ category, images }) => {
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={index}
-                        initial={{ opacity: 0, scale: 1.05 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0, scale: 1.15, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, scale: 0.85, filter: "blur(10px)" }}
                         transition={{ duration: 1.2, ease: "easeInOut" }}
-                        className="absolute inset-0 w-full h-full"
+                        className="absolute inset-0 w-full h-full origin-center"
                     >
                         <img src={currentImg.url} alt={currentImg.title} className="w-full h-full object-cover" />
                         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8 md:p-12 pb-16 md:pb-20">
