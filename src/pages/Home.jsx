@@ -188,6 +188,9 @@ export default function Home() {
                                 <Link to="/gallery" className="px-8 py-4 bg-pink-50 text-pink-600 border border-pink-100 rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-sm hover:bg-pink-100 transition-colors w-full sm:w-auto justify-center sm:justify-start md:hidden">
                                     <ImageIcon size={16} /> 2025 SEASON
                                 </Link>
+                                <Link to="/socials" className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-black text-sm tracking-widest flex items-center gap-3 shadow-lg shadow-pink-500/30 hover:scale-105 transition-all w-full sm:w-auto justify-center sm:justify-start">
+                                    <Globe size={16} /> OUR SOCIALS
+                                </Link>
                             </motion.div>
                         </div>
 
