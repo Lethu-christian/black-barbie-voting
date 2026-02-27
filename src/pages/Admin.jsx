@@ -135,7 +135,7 @@ export default function Admin() {
     const [editingContestant, setEditingContestant] = useState(null);
     const [editingGallery, setEditingGallery] = useState(null);
     const [newC, setNewC] = useState({ name: '', number: '', bio: '', image_url: '', imageFile: null });
-    const [newG, setNewG] = useState({ title: '', desc: '', url: '', imageFile: null });
+    const [newG, setNewG] = useState({ title: '', desc: '', url: '', category: 'models', imageFile: null });
 
     // --- LOGIC (UNCHANGED) ---
     useEffect(() => {
@@ -268,7 +268,8 @@ export default function Admin() {
             const { error } = await supabase.from('gallery').insert([{
                 title: newG.title,
                 desc: newG.desc,
-                url: finalImageUrl
+                url: finalImageUrl,
+                category: newG.category || 'models'
             }]);
 
             if (!error) {
@@ -288,7 +289,7 @@ export default function Admin() {
             }
 
             const { error } = await supabase.from('gallery').update({
-                title: editingGallery.title, desc: editingGallery.desc, url: finalImageUrl
+                title: editingGallery.title, desc: editingGallery.desc, url: finalImageUrl, category: editingGallery.category || 'models'
             }).eq('id', editingGallery.id);
             if (!error) {
                 setEditingGallery(null);
@@ -683,13 +684,16 @@ export default function Admin() {
 
                                             {/* Action Buttons */}
                                             <div className="absolute inset-0 z-20 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100">
-                                                <button onClick={() => setEditingGallery({ ...item })} className="p-3 bg-white rounded-xl text-slate-800 hover:text-pink-600 shadow-lg hover:shadow-xl transition-all"><Edit size={18} /></button>
+                                                <button onClick={() => setEditingGallery({ ...item, category: item.category || 'models' })} className="p-3 bg-white rounded-xl text-slate-800 hover:text-pink-600 shadow-lg hover:shadow-xl transition-all"><Edit size={18} /></button>
                                                 <button onClick={() => handleDeleteGallery(item.id)} className="p-3 bg-white rounded-xl text-rose-500 hover:bg-rose-50 shadow-lg hover:shadow-xl transition-all"><Trash2 size={18} /></button>
                                             </div>
                                         </div>
                                         <div className="p-6">
-                                            <h3 className="font-black text-lg text-slate-800 truncate">{item.title}</h3>
-                                            <p className="text-slate-400 text-xs mt-2 line-clamp-2 font-medium leading-relaxed">{item.desc}</p>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="font-black text-lg text-slate-800 truncate pr-2">{item.title}</h3>
+                                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-1 bg-pink-100 text-pink-600 rounded-lg whitespace-nowrap">{item.category?.replace(/_/g, ' ') || 'MODELS'}</span>
+                                            </div>
+                                            <p className="text-slate-400 text-xs line-clamp-2 font-medium leading-relaxed">{item.desc}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -779,6 +783,25 @@ export default function Admin() {
                                         <input className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-bold text-slate-700"
                                             value={isAddingGallery ? newG.title : editingGallery.title}
                                             onChange={e => isAddingGallery ? setNewG({ ...newG, title: e.target.value }) : setEditingGallery({ ...editingGallery, title: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                        <div className="relative">
+                                            <select className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-bold text-slate-700 appearance-none cursor-pointer"
+                                                value={isAddingGallery ? (newG.category || 'models') : (editingGallery.category || 'models')}
+                                                onChange={e => isAddingGallery ? setNewG({ ...newG, category: e.target.value }) : setEditingGallery({ ...editingGallery, category: e.target.value })}
+                                            >
+                                                <option value="top_winners">Top Winners of 2025</option>
+                                                <option value="models">Models</option>
+                                                <option value="stage_moments">Stage Moments</option>
+                                                <option value="host">Host</option>
+                                                <option value="director">Director</option>
+                                                <option value="ceo">Blackbarbiebytk CEO</option>
+                                            </select>
+                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                <ChevronRight size={16} className="rotate-90" />
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Image File</label>
