@@ -85,27 +85,49 @@ export default function Gallery() {
                             <p className="font-bold tracking-widest uppercase text-xs">Loading Archives...</p>
                         </div>
                     ) : (
-                        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-                            {images.map((img, idx) => (
-                                <motion.div
-                                    key={img.id || idx}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    viewport={{ once: true }}
-                                    className="relative group break-inside-avoid"
-                                >
-                                    <div className="bg-white p-3 rounded-[2rem] shadow-xl border border-white hover:shadow-2xl transition-all duration-500">
-                                        <div className="relative rounded-[1.5rem] overflow-hidden">
-                                            <img src={img.url} alt={img.title} className="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-110" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
-                                                <h4 className="text-white font-bold text-lg">{img.title}</h4>
-                                                <p className="text-white/80 text-xs mt-1">{img.desc}</p>
-                                            </div>
+                        <div className="space-y-24">
+                            {[
+                                { id: 'top_winners', label: 'Top Winners of 2025' },
+                                { id: 'models', label: 'Models' },
+                                { id: 'stage_moments', label: 'Stage Moments' },
+                                { id: 'host', label: 'Host' },
+                                { id: 'director', label: 'Director' },
+                                { id: 'ceo', label: 'Blackbarbiebytk CEO' }
+                            ].map(category => {
+                                const categoryImages = images.filter(img => (img.category || 'models') === category.id);
+                                if (categoryImages.length === 0) return null;
+
+                                return (
+                                    <div key={category.id} className="space-y-8">
+                                        <div className="flex items-center gap-4">
+                                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">{category.label}</h2>
+                                            <div className="flex-1 h-px bg-pink-200"></div>
+                                        </div>
+                                        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+                                            {categoryImages.map((img, idx) => (
+                                                <motion.div
+                                                    key={img.id || idx}
+                                                    initial={{ opacity: 0, y: 30 }}
+                                                    whileInView={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.1 }}
+                                                    viewport={{ once: true }}
+                                                    className="relative group break-inside-avoid"
+                                                >
+                                                    <div className="bg-white p-3 rounded-[2rem] shadow-xl border border-white hover:shadow-2xl transition-all duration-500">
+                                                        <div className="relative rounded-[1.5rem] overflow-hidden">
+                                                            <img src={img.url} alt={img.title} className="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-110" />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                                                                <h4 className="text-white font-bold text-lg">{img.title}</h4>
+                                                                <p className="text-white/80 text-xs mt-1">{img.desc}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
                                         </div>
                                     </div>
-                                </motion.div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
 
