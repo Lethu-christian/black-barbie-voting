@@ -128,28 +128,32 @@ export default function Socials() {
 
                                 <div className="grid grid-cols-1 gap-3">
                                     {platform.links.map((link, lIdx) => (
-                                        <motion.a
-                                            whileHover={{ scale: 1.015 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            key={lIdx}
-                                            href={link.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/60 rounded-2xl border border-white/50 hover:border-pink-300 hover:bg-white transition-all shadow-sm hover:shadow-md"
-                                        >
-                                            <div className="flex items-center gap-4 w-full sm:w-auto mb-2 sm:mb-0">
-                                                <div className={cn("p-2.5 rounded-xl flex-shrink-0 transition-colors group-hover:bg-white", platform.bgGlow, platform.textColor)}>
-                                                    <ExternalLink size={18} strokeWidth={2.5} />
-                                                </div>
-                                                <span className="font-bold text-slate-700 group-hover:text-slate-900 transition-colors break-words max-w-full truncate pr-4 text-base">
-                                                    {link.name}
-                                                </span>
-                                            </div>
+                                        <div key={lIdx} className="relative group/btn">
+                                            {/* Pulsing Pink Glow Behind Button */}
+                                            <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-purple-500 rounded-2xl blur opacity-30 group-hover/btn:opacity-60 transition duration-1000 group-hover/btn:duration-200 animate-pulse" />
 
-                                            <div className="hidden sm:flex px-5 py-2.5 bg-slate-50 group-hover:bg-slate-900 text-slate-500 group-hover:text-white rounded-xl text-[11px] font-black tracking-widest uppercase transition-all shrink-0">
-                                                Open Link
-                                            </div>
-                                        </motion.a>
+                                            <motion.a
+                                                whileHover={{ scale: 1.015 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                href={link.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-pink-100/50 hover:border-pink-300 hover:bg-white transition-all shadow-sm hover:shadow-md z-10"
+                                            >
+                                                <div className="flex items-center gap-4 w-full sm:w-auto mb-2 sm:mb-0">
+                                                    <div className={cn("p-2.5 rounded-xl flex-shrink-0 transition-colors bg-white shadow-sm", platform.textColor)}>
+                                                        <ExternalLink size={18} strokeWidth={2.5} />
+                                                    </div>
+                                                    <span className="font-black text-slate-800 tracking-tight group-hover/btn:text-pink-600 transition-colors break-words max-w-full truncate pr-4 text-base md:text-lg">
+                                                        {link.name}
+                                                    </span>
+                                                </div>
+
+                                                <div className="hidden sm:flex px-5 py-2.5 bg-pink-50 group-hover/btn:bg-pink-500 text-pink-600 group-hover/btn:text-white rounded-xl text-[11px] font-black tracking-widest uppercase transition-all shrink-0 shadow-sm shadow-pink-100">
+                                                    Follow
+                                                </div>
+                                            </motion.a>
+                                        </div>
                                     ))}
                                 </div>
                             </motion.div>
