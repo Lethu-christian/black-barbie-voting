@@ -1,8 +1,81 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Camera, ArrowLeft, Trophy, Star, Crown, Sparkles, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { Camera, ArrowLeft, Trophy, Star, Crown, Sparkles, Image as ImageIcon, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+
+const CategorySlideshow = ({ category, images }) => {
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+        const timer = setInterval(() => {
+            setIndex((prev) => (prev + 1) % images.length);
+        }, 5000); // 5 seconds interval
+        return () => clearInterval(timer);
+    }, [images.length]);
+
+    if (images.length === 0) return null;
+
+    const currentImg = images[index];
+
+    return (
+        <div className="space-y-8">
+            <div className="flex items-center gap-4">
+                <h2 className="text-3xl font-black text-slate-800 tracking-tight">{category.label}</h2>
+                <div className="flex-1 h-px bg-pink-200"></div>
+                <div className="flex gap-2">
+                    <button onClick={() => setIndex((prev) => (prev - 1 + images.length) % images.length)} className="p-2 rounded-full border border-pink-200 text-pink-500 hover:bg-pink-50 transition-colors">
+                        <ChevronLeft size={20} />
+                    </button>
+                    <button onClick={() => setIndex((prev) => (prev + 1) % images.length)} className="p-2 rounded-full border border-pink-200 text-pink-500 hover:bg-pink-50 transition-colors">
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="relative w-full h-[400px] md:h-[600px] bg-white rounded-[2rem] md:rounded-[3rem] shadow-xl md:shadow-2xl overflow-hidden border-4 border-white group">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 1.05 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.2, ease: "easeInOut" }}
+                        className="absolute inset-0 w-full h-full"
+                    >
+                        <img src={currentImg.url} alt={currentImg.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8 md:p-12 pb-16 md:pb-20">
+                            <motion.h4
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4, duration: 0.8 }}
+                                className="text-white font-black text-3xl md:text-5xl mb-3 tracking-tight drop-shadow-lg"
+                            >
+                                {currentImg.title}
+                            </motion.h4>
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.7, duration: 0.8 }}
+                                className="text-white/90 md:text-lg max-w-2xl font-medium drop-shadow-md line-clamp-3"
+                            >
+                                {currentImg.desc}
+                            </motion.p>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* Dots indicator */}
+                <div className="absolute bottom-6 inset-x-0 flex gap-2 justify-center z-10">
+                    {images.map((_, i) => (
+                        <button key={i} aria-label={`Go to slide ${i + 1}`} onClick={() => setIndex(i)} className={`h-2 rounded-full transition-all duration-500 ${i === index ? 'w-8 bg-pink-500' : 'w-2 bg-white/50 hover:bg-white'}`} />
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default function Gallery() {
     const [images, setImages] = useState([]);
@@ -97,36 +170,7 @@ export default function Gallery() {
                                 const categoryImages = images.filter(img => (img.category || 'models') === category.id);
                                 if (categoryImages.length === 0) return null;
 
-                                return (
-                                    <div key={category.id} className="space-y-8">
-                                        <div className="flex items-center gap-4">
-                                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">{category.label}</h2>
-                                            <div className="flex-1 h-px bg-pink-200"></div>
-                                        </div>
-                                        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-                                            {categoryImages.map((img, idx) => (
-                                                <motion.div
-                                                    key={img.id || idx}
-                                                    initial={{ opacity: 0, y: 30 }}
-                                                    whileInView={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: idx * 0.1 }}
-                                                    viewport={{ once: true }}
-                                                    className="relative group break-inside-avoid"
-                                                >
-                                                    <div className="bg-white p-3 rounded-[2rem] shadow-xl border border-white hover:shadow-2xl transition-all duration-500">
-                                                        <div className="relative rounded-[1.5rem] overflow-hidden">
-                                                            <img src={img.url} alt={img.title} className="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-110" />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
-                                                                <h4 className="text-white font-bold text-lg">{img.title}</h4>
-                                                                <p className="text-white/80 text-xs mt-1">{img.desc}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
+                                return <CategorySlideshow key={category.id} category={category} images={categoryImages} />;
                             })}
                         </div>
                     )}
