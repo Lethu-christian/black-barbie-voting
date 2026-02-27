@@ -96,7 +96,7 @@ export default function Leaderboard() {
                                             <Activity size={16} className="text-pink-500" />
                                         </div>
                                         <span className="text-sm font-bold text-slate-500 uppercase tracking-widest font-mono">
-                                            Active Contenders
+                                            Active Contestants
                                         </span>
                                     </div>
                                     <div className="text-xs font-mono text-slate-400 bg-white/50 px-2 py-1 rounded border border-white">
@@ -319,4 +319,5 @@ function ContestantRow({ contestant, index, maxVotes }) {
             </motion.div>
         </Link>
     );
+
 }
