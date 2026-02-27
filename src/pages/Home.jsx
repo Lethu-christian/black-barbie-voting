@@ -306,6 +306,90 @@ export default function Home() {
                         )}
                     </div>
                 </main>
+
+                {/* 5. OFFICIAL SPONSORS / FOOTER */}
+                <footer className="w-full bg-white/40 backdrop-blur-3xl border-t border-white shadow-[0_-10px_40px_rgba(236,72,153,0.05)] relative z-20 pb-28 md:pb-16 pt-16 mt-16">
+                    <div className="max-w-7xl mx-auto px-6 text-center">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-100 text-pink-600 font-black text-[10px] tracking-widest uppercase mb-10 border border-pink-200 shadow-sm"
+                        >
+                            <Zap size={14} /> MEET OUR SPONSORS
+                        </motion.div>
+
+                        <div className="w-full overflow-hidden pb-12 pt-4 relative mask-image-gradient">
+                            <style>{`
+                                @keyframes scroll {
+                                    0% { transform: translateX(0); }
+                                    100% { transform: translateX(-50%); }
+                                }
+                                .marquee-track {
+                                    display: flex;
+                                    flex-direction: row;
+                                    flex-wrap: nowrap;
+                                    align-items: center;
+                                    gap: 2rem;
+                                    width: max-content;
+                                    animation: scroll 40s linear infinite;
+                                }
+                                @media (min-width: 768px) {
+                                    .marquee-track { gap: 4rem; animation-duration: 50s; }
+                                }
+                                @media (min-width: 1024px) {
+                                    .marquee-track { gap: 5rem; animation-duration: 60s; }
+                                }
+                                .marquee-container {
+                                    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+                                    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+                                }
+                            `}</style>
+                            <div className="marquee-container w-full overflow-hidden opacity-80 hover:opacity-100 transition-opacity duration-700">
+                                <div className="marquee-track">
+                                    {[
+                                        // Array is duplicated to create a seamless infinite loop
+                                        { id: '1a', src: "/bbbtk.png" }, { id: '2a', src: "/2.png" },
+                                        { id: '3a', src: "/3.png" }, { id: '4a', src: "/4.png" },
+                                        { id: '5a', src: "/5.png" }, { id: '6a', src: "/6.png" },
+                                        { id: '7a', src: "/7.png" }, { id: '8a', src: "/8.png" },
+                                        { id: '1b', src: "/bbbtk.png" }, { id: '2b', src: "/2.png" },
+                                        { id: '3b', src: "/3.png" }, { id: '4b', src: "/4.png" },
+                                        { id: '5b', src: "/5.png" }, { id: '6b', src: "/6.png" },
+                                        { id: '7b', src: "/7.png" }, { id: '8b', src: "/8.png" },
+                                    ].map((sponsor, index) => (
+                                        <motion.div
+                                            key={sponsor.id}
+                                            animate={{ y: [0, -15, 0] }}
+                                            transition={{
+                                                duration: 4,
+                                                repeat: Infinity,
+                                                ease: "easeInOut",
+                                                delay: (index % 8) * 0.2 // Keep bounce timing synced across duplicates
+                                            }}
+                                            whileHover={{ scale: 1.15 }}
+                                            className="relative flex items-center justify-center w-20 h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 shrink-0 transition-transform duration-500 cursor-pointer"
+                                        >
+                                            <img
+                                                src={sponsor.src}
+                                                alt={`Sponsor ${sponsor.id}`}
+                                                className="w-full h-full object-contain filter drop-shadow-sm hover:drop-shadow-xl transition-all"
+                                            />
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-slate-200/50">
+                            <div className="flex items-center gap-3">
+                                <Crown size={20} className="text-pink-500" />
+                                <span className="font-black tracking-tighter text-slate-900 text-sm">BLACK BARBIE AMBASSADOR</span>
+                            </div>
+                            <p className="font-bold text-xs text-slate-400 uppercase tracking-widest">© 2025 All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </footer>
             </div>
 
             {/* Mobile Nav */}
